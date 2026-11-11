@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+:root {
+  /* MD3 Color Tokens */
+  --md-sys-color-background: #1C1B1F;
+  --md-sys-color-surface: #201A23;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-primary-container: #21005D;
+  --md-sys-color-on-primary-container: #EADDFF;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+  
+  /* Shapes */
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* Motion */
+  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --md-sys-motion-duration-long: 600ms;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--md-sys-color-background);
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Hide scrollbars utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.app-container {
+  width: 100%;
+  height: 100%;
+  background-color: var(--md-sys-color-surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-panel {
+  position: absolute;
+  left: 50%;
+  transform: translate3d(-50%, 0, 0) scale(1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  contain: paint layout;
+  
+  transition: 
+    top var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-emphasized),
+    width var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-emphasized),
+    height var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-emphasized),
+    border-radius var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-emphasized),
+    padding var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-emphasized),
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  will-change: top, width, height, transform;
+}
+
+/* Identidad de Color por Panel */
+#panel1 {
+  background-color: #1a162b;
+  color: #EADDFF;
+}
+#panel1.collapsed:hover {
+  background-color: #27213d; 
+}
+#panel1.collapsed:active {
+  background-color: #352c54;
+}
+
+#panel2 {
+  background-color: #252033;
+  color: #E8DEF8;
+}
+#panel2.collapsed:hover {
+  background-color: #322b45;
+}
+#panel2.collapsed:active {
+  background-color: #403657;
+}
+
+.interactive-panel.expanded {
+  top: 0;
+  width: 100%; 
+  height: 100%;
+  z-index: 1;
+  border-radius: 0;
+  cursor: default;
+  box-shadow: none;
+  transform: translate3d(-50%, 0, 0) scale(1);
+}
+
+#panel1.expanded {
+  padding-bottom: 80px;
+}
+
+#panel2.expanded {
+  padding-top: 60px;
+  padding-bottom: 16px;
+}
+
+.interactive-panel.collapsed {
+  height: 56px; 
+  width: auto;
+  max-width: 90vw;
+  z-index: 20;
+  border-radius: var(--md-sys-shape-corner-full); 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+/* Touch & Hover Expansion Cues for Collapsed Panels */
+.interactive-panel.collapsed:hover,
+.interactive-panel.collapsed:focus-visible {
+  transform: translate3d(-50%, 0, 0) scale(1.05);
+  border-color: rgba(234, 221, 255, 0.5);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.65), 0 0 20px rgba(168, 85, 247, 0.35);
+}
+
+.interactive-panel.collapsed:active {
+  transform: translate3d(-50%, 0, 0) scale(0.96);
+  transition-duration: 0.1s;
+  border-color: rgba(234, 221, 255, 0.75);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 24px rgba(168, 85, 247, 0.5);
+}
+
+#panel1.collapsed {
+  top: 16px; /* Flota en la parte superior del contenedor */
+}
+
+#panel2.collapsed {
+  top: calc(100% - 72px); /* Flota en la parte inferior */
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px 10px 20px;
+  transition: padding 0.3s ease;
+  white-space: nowrap;
+  shrink: 0;
+}
+
+.collapsed .panel-header {
+  padding: 0 20px;
+  height: 100%;
+}
+
+.panel-header .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.panel-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.1px;
+}
+
+.panel-content {
+  padding: 0 12px 12px 12px;
+  opacity: 1;
+  transition: opacity 0.3s ease 0.2s;
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Specific panel content styling for carousel */
+#panel1 .panel-content {
+  overflow: hidden;
+  justify-content: center;
+  padding: 0;
+}
+
+.collapsed .panel-content {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+  position: absolute;
+  visibility: hidden;
+}

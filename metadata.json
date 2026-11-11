@@ -1,0 +1,6 @@
+{
+  "name": "Carrusel Vertical Fluido",
+  "description": "Carrusel vertical interactivo con gestos táctiles, expansión de tarjetas, compresión entre elementos y carga diferida de imágenes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
