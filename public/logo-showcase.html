@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Micro-it — Isotipo con Bordes Rectos & Gradiente Negro a Dinámico</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Sombra animada Aurora Boreal mística y suave para el símbolo µ interior */
+    @keyframes aurora-symbol-drop {
+      0% {
+        filter: 
+          drop-shadow(0 0 3px #10b981)
+          drop-shadow(0 0 8px rgba(6, 182, 212, 0.9))
+          drop-shadow(0 0 16px rgba(139, 92, 246, 0.75));
+      }
+      25% {
+        filter: 
+          drop-shadow(0 0 3px #06b6d4)
+          drop-shadow(0 0 8px rgba(56, 189, 248, 0.95))
+          drop-shadow(0 0 16px rgba(16, 185, 129, 0.75));
+      }
+      50% {
+        filter: 
+          drop-shadow(0 0 3px #38bdf8)
+          drop-shadow(0 0 8px rgba(139, 92, 246, 0.95))
+          drop-shadow(0 0 16px rgba(6, 182, 212, 0.75));
+      }
+      75% {
+        filter: 
+          drop-shadow(0 0 3px #a855f7)
+          drop-shadow(0 0 8px rgba(236, 72, 153, 0.9))
+          drop-shadow(0 0 16px rgba(56, 189, 248, 0.75));
+      }
+      100% {
+        filter: 
+          drop-shadow(0 0 3px #10b981)
+          drop-shadow(0 0 8px rgba(6, 182, 212, 0.9))
+          drop-shadow(0 0 16px rgba(139, 92, 246, 0.75));
+      }
+    }
+
+    .aurora-symbol-glow {
+      animation: aurora-symbol-drop 9.5s ease-in-out infinite;
+      will-change: filter;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-6 selection:bg-sky-500/30">
+
+  <div class="max-w-3xl w-full flex flex-col items-center text-center space-y-8">
+    
+    <!-- Header -->
+    <div>
+      <span class="px-3.5 py-1 rounded-full text-xs font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30 uppercase tracking-widest">
+        Dirección de Marca Oficial · Micro-it
+      </span>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mt-3">
+        Símbolo Recto · Gradiente Negro a Color Dinámico
+      </h1>
+      <p class="text-sm text-slate-400 mt-2 max-w-xl mx-auto">
+        El glifo <span class="text-white font-bold">µ</span> adopta cortes planos rectos en sus extremos. El cuerpo del icono nace desde el <span class="text-white font-semibold">negro absoluto (#000000)</span> y se proyecta hacia el <span class="text-sky-400 font-semibold">color reactivo</span> de la solución activa.
+      </p>
+    </div>
+
+    <!-- Live Interactive Preview -->
+    <div id="card-preview" class="relative p-10 md:p-14 rounded-3xl bg-slate-900/80 border border-white/10 backdrop-blur-2xl flex flex-col items-center justify-center w-full max-w-md shadow-2xl transition-all duration-700">
+      
+      <!-- Badge Body Reactivo (Negro hacia Color Dinámico) -->
+      <div 
+        id="badge-body"
+        class="relative w-28 h-28 rounded-3xl flex items-center justify-center cursor-pointer transition-all duration-600 ease-out hover:scale-105 border border-white/25"
+        style="background: linear-gradient(135deg, #000000 0%, color-mix(in srgb, #0ea5e9 30%, #000000) 45%, #0ea5e9 100%); box-shadow: 0 12px 32px -4px rgba(14, 165, 233, 0.7), inset 0 1px 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 6px 0 rgba(0, 0, 0, 0.5);"
+      >
+        <!-- Destello especular superior de cristal 3D -->
+        <div class="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/25 via-transparent to-black/30 pointer-events-none"></div>
+
+        <!-- Símbolo Vectorial µ con BORDES RECTOS PLANOS (Flat-cut) y SOMBRA AURORA -->
+        <svg viewBox="0 0 100 100" class="w-22 h-22 relative z-10 aurora-symbol-glow">
+          <path
+            d="M 17.5,12.0 L 35.5,12.0 L 35.5,46.0 C 35.5,53.5 39.5,58.0 46.5,58.0 C 53.5,58.0 57.5,53.5 57.5,46.0 L 57.5,12.0 L 75.5,12.0 L 75.5,51.0 C 75.5,56.5 78.5,59.5 84.5,60.5 L 84.5,72.5 C 74.0,72.5 64.5,66.0 61.0,58.0 C 56.0,66.0 47.5,70.5 39.5,70.5 C 36.0,70.5 35.5,68.0 35.5,64.0 L 35.5,88.0 L 17.5,88.0 Z"
+            fill="#000000"
+          />
+        </svg>
+      </div>
+
+      <!-- Color indicator -->
+      <div class="mt-6">
+        <span id="color-label" class="text-xs font-mono font-bold text-sky-400 bg-sky-500/10 px-3 py-1 rounded-full border border-sky-500/20">
+          Gradiente: #000000 &rarr; #0ea5e9 (Wanda POS)
+        </span>
+      </div>
+
+      <!-- Live Color Switcher Selector -->
+      <div class="mt-8 w-full border-t border-white/10 pt-6">
+        <p class="text-xs text-slate-400 mb-3">Haz clic para comprobar la reacción del gradiente negro a color:</p>
+        <div class="flex items-center justify-center gap-3">
+          <button onclick="setTheme('#0ea5e9', 'Wanda POS & Cloud')" class="w-8 h-8 rounded-full bg-sky-500 hover:scale-110 transition-transform border-2 border-white/50 cursor-pointer shadow-lg" title="Wanda POS (#0ea5e9)"></button>
+          <button onclick="setTheme('#10b981', 'WhatsApp Bulk Sender')" class="w-8 h-8 rounded-full bg-emerald-500 hover:scale-110 transition-transform border-2 border-white/50 cursor-pointer shadow-lg" title="WhatsApp Sender (#10b981)"></button>
+          <button onclick="setTheme('#8b5cf6', 'AudioNotes AI Studio')" class="w-8 h-8 rounded-full bg-purple-500 hover:scale-110 transition-transform border-2 border-white/50 cursor-pointer shadow-lg" title="AudioNotes AI (#8b5cf6)"></button>
+          <button onclick="setTheme('#f59e0b', 'PrintLabel Pro & Thermal')" class="w-8 h-8 rounded-full bg-amber-500 hover:scale-110 transition-transform border-2 border-white/50 cursor-pointer shadow-lg" title="PrintLabel Pro (#f59e0b)"></button>
+          <button onclick="setTheme('#6366f1', 'Micro-it Studio Core')" class="w-8 h-8 rounded-full bg-indigo-500 hover:scale-110 transition-transform border-2 border-white/50 cursor-pointer shadow-lg" title="Micro-it Studio (#6366f1)"></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Technical Features -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl text-left">
+      <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+        <div class="text-xs font-mono font-bold text-sky-400 mb-1">BORDES RECTOS (FLAT)</div>
+        <p class="text-xs text-slate-300">
+          Cortes planos horizontales y verticales en las astas y terminal. Elimina remates semicirculares para un acabado de alta precisión tecnológica.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+        <div class="text-xs font-mono font-bold text-emerald-400 mb-1">GRADIENTE NEGRO A COLOR</div>
+        <p class="text-xs text-slate-300">
+          Transición desde negro absoluto (#000000) a 0% hacia el color dinámico de la página a 100%, con matiz intermedio de fusión suave.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+        <div class="text-xs font-mono font-bold text-purple-400 mb-1">AURA POLAR INTERNA</div>
+        <p class="text-xs text-slate-300">
+          La sombra Aurora Boreal irradia directamente desde el contorno del glifo negro, generando un efecto de eclipse luminoso sobre el fondo oscuro.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function setTheme(color, name) {
+      const badge = document.getElementById('badge-body');
+      const label = document.getElementById('color-label');
+      
+      badge.style.background = `linear-gradient(135deg, #000000 0%, color-mix(in srgb, ${color} 30%, #000000) 45%, ${color} 100%)`;
+      badge.style.boxShadow = `0 12px 32px -4px ${color}70, inset 0 1px 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 6px 0 rgba(0, 0, 0, 0.5)`;
+      
+      label.textContent = `Gradiente: #000000 → ${color} (${name})`;
+      label.style.color = color;
+      label.style.borderColor = color + '40';
+      label.style.backgroundColor = color + '15';
+    }
+  </script>
+
+</body>
+</html>

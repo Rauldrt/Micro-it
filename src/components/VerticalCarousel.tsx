@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, useMotionValue } from 'motion/react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
-import { MapPin, Maximize2, ChevronUp, ChevronDown, MoveVertical } from 'lucide-react';
+import { MapPin, Maximize2, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface VerticalCarouselProps {
   cards: CardItem[];
@@ -145,11 +145,14 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
               }}
               style={{
                 transformStyle: 'preserve-3d',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                willChange: 'transform, opacity',
                 boxShadow: isActive
                   ? card.glowColor
-                    ? `0 25px 60px -10px ${card.glowColor}`
-                    : '0 25px 60px -10px rgba(0,0,0,0.8)'
-                  : '0 10px 30px -10px rgba(0,0,0,0.5)'
+                    ? `0 20px 50px -10px ${card.glowColor}`
+                    : '0 20px 50px -10px rgba(0,0,0,0.8)'
+                  : '0 8px 24px -8px rgba(0,0,0,0.5)'
               }}
               initial={false}
               animate={
@@ -164,7 +167,6 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                       maxWidth: '100%',
                       borderRadius: '0px',
                       opacity: 1,
-                      filter: 'blur(0px)',
                       zIndex: 20
                     }
                   : isTop
@@ -177,8 +179,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                       width: compressedWidth,
                       maxWidth: '42rem',
                       borderRadius: '24px',
-                      opacity: 0.65,
-                      filter: 'blur(2px)',
+                      opacity: 0.7,
                       zIndex: 10
                     }
                   : isBottom
@@ -191,8 +192,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                       width: compressedWidth,
                       maxWidth: '42rem',
                       borderRadius: '24px',
-                      opacity: 0.65,
-                      filter: 'blur(2px)',
+                      opacity: 0.7,
                       zIndex: 10
                     }
                   : {
@@ -205,7 +205,6 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                       maxWidth: '36rem',
                       borderRadius: '24px',
                       opacity: 0,
-                      filter: 'blur(6px)',
                       zIndex: 0
                     }
               }
@@ -255,8 +254,8 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
               />
 
               {/* Gradient Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-              <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-50 mix-blend-multiply`} />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
+              <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-60 pointer-events-none`} />
 
               {/* Accent Line on Top */}
               <div
@@ -269,17 +268,17 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                 {/* Header info inside card */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full border backdrop-blur-md ${card.badgeBg}`}>
+                    <span className={`px-3 py-1 text-xs font-bold rounded-full border bg-slate-950/75 ${card.badgeBg}`}>
                       {card.category}
                     </span>
-                    <span className="flex items-center gap-1 text-xs font-medium text-slate-200 bg-black/50 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-md">
+                    <span className="flex items-center gap-1 text-xs font-medium text-slate-200 bg-slate-950/75 px-2.5 py-1 rounded-full border border-white/10">
                       <MapPin className="w-3 h-3 text-rose-400" />
                       {card.location}
                     </span>
                   </div>
 
                   {isActive && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 group-hover:bg-white/25 text-white text-xs font-semibold backdrop-blur-md transition-all active:scale-95">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 group-hover:bg-white/25 text-white text-xs font-semibold border border-white/10 transition-all active:scale-95">
                       <Maximize2 className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Ver Completo</span>
                     </div>
@@ -314,7 +313,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                   {isActive && (
                     <div className="hidden sm:flex items-center gap-2">
                       {card.specs.slice(0, 2).map((s, specIdx) => (
-                        <div key={specIdx} className="px-3 py-1.5 rounded-xl bg-black/50 border border-white/10 text-right backdrop-blur-md">
+                        <div key={specIdx} className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/10 text-right">
                           <div className="text-[10px] text-slate-400 uppercase font-mono">{s.label}</div>
                           <div className="text-xs font-bold text-white">{s.value}</div>
                         </div>
@@ -326,16 +325,6 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
             </motion.div>
           );
         })}
-      </div>
-
-      {/* Touch Gesture Helper / Keyboard Indicator */}
-      <div className="mt-4 flex items-center gap-3 text-[11px] text-slate-400 font-mono">
-        <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-          <MoveVertical className="w-3.5 h-3.5 text-indigo-400 animate-bounce" />
-          <span>Efecto 3D Elástico: Arrastra arriba / abajo con dedo o ratón</span>
-        </span>
-        <span className="hidden sm:inline text-slate-600">·</span>
-        <span className="hidden sm:inline">Rueda del ratón o teclas de dirección</span>
       </div>
     </motion.div>
   );

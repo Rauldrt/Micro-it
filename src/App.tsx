@@ -62,23 +62,16 @@ export default function App() {
 
   return (
     <div className="relative w-full h-screen h-[100dvh] max-h-[100dvh] flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
-      {/* Background Ambient Glow relative to active card */}
+      {/* Background Ambient Glow relative to active card - High GPU Performance */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-30 transition-all duration-1000 blur-3xl"
+        className="absolute inset-0 pointer-events-none opacity-40 transition-colors duration-700"
         style={{
-          background: `radial-gradient(circle at 50% 40%, ${activeCard.accentColor}, transparent 70%)`
+          background: `radial-gradient(circle at 50% 35%, ${activeCard.accentColor}33 0%, transparent 65%)`
         }}
       />
 
       {/* Header Bar */}
-      <HeaderBar
-        activeModule={activeModule}
-        onSelectModule={setActiveModule}
-        activeCard={activeCard}
-        currentIndex={currentIndex}
-        totalCards={cards.length}
-        onReset={() => setCurrentIndex(0)}
-      />
+      <HeaderBar activeCard={activeCard} />
 
       {/* Main View Container (MD3 App Container with Floating Panels) */}
       <main className="app-container flex-1 relative overflow-hidden">

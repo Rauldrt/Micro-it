@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, ArrowLeft } from 'lucide-react';
+import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink } from 'lucide-react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
 
@@ -56,28 +56,16 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           }}
           className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto scrollbar-none"
         >
-          {/* Top Sticky Header Bar */}
-          <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
+          {/* Botón flotante para salir con sombra Aurora Boreal */}
+          <div className="sticky top-5 z-40 flex justify-end px-6 pointer-events-none h-0">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all group active:scale-95 cursor-pointer"
+              className="pointer-events-auto h-10 px-4 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol"
+              title="Salir (Esc)"
             >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-              <span>Volver al Carrusel</span>
+              <span>Salir</span>
+              <X className="w-4 h-4 text-sky-300" />
             </button>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono px-3 py-1 rounded-full bg-white/10 text-slate-300">
-                Tarjeta {card.number} / 06
-              </span>
-              <button
-                onClick={onClose}
-                className="p-2.5 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-300 text-slate-300 transition-all active:scale-90 cursor-pointer"
-                title="Cerrar vista completa"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
           </div>
 
           {/* Hero Image Section */}

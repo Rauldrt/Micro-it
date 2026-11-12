@@ -11,8 +11,10 @@ import {
   Pause, 
   Touchpad, 
   ChevronRight,
-  Layers
+  Layers,
+  Palette
 } from 'lucide-react';
+import { MicroLogo, LogoVariant } from './MicroLogo';
 
 interface BottomElementProps {
   activeCard: CardItem;
@@ -39,7 +41,7 @@ export const BottomElement: React.FC<BottomElementProps> = ({
   totalCards,
   onSelectCard
 }) => {
-  const [activeTab, setActiveTab] = useState<'details' | 'controls' | 'navigator'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'controls' | 'navigator' | 'branding'>('details');
 
   if (!isExpanded) return null;
 
@@ -53,7 +55,7 @@ export const BottomElement: React.FC<BottomElementProps> = ({
           damping: 24,
           mass: 0.85
         }}
-        className="relative overflow-hidden rounded-3xl bg-slate-900/95 border border-white/20 backdrop-blur-2xl shadow-2xl text-white"
+        className="relative overflow-hidden rounded-3xl bg-slate-900 border border-white/20 shadow-2xl text-white"
       >
         {/* Glow Header Accent */}
         <div 
@@ -137,6 +139,18 @@ export const BottomElement: React.FC<BottomElementProps> = ({
           >
             <Compass className="w-3.5 h-3.5" />
             <span>Navegador</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('branding')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'branding'
+                ? 'bg-white/15 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>Variantes µ</span>
           </button>
         </motion.div>
 
@@ -275,6 +289,79 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                     </motion.button>
                   );
                 })}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'branding' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.28 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-sky-400" />
+                    <span>Variantes de Identidad del Símbolo Micro (µ)</span>
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Explora las 4 propuestas vectoriales para el isotipo oficial de Micro-it:
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-slate-300">
+                  Acento actual: {activeCard.accentColor}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                {/* 1. BADGE DINÁMICO 3D (ELEGIDO) */}
+                <div className="p-4 rounded-2xl bg-white/10 border-2 border-emerald-400/40 shadow-xl flex flex-col items-center text-center gap-3 hover:border-emerald-400 transition-all relative overflow-hidden">
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider">
+                    Elegido
+                  </div>
+                  <MicroLogo variant="badge" size="lg" accentColor={activeCard.accentColor} />
+                  <div>
+                    <div className="text-xs font-bold text-white">01. Badge Dinámico 3D</div>
+                    <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                      Símbolo µ con bordes rectos en negro sólido, cuerpo con gradiente de negro al color dinámico y sombra polar Aurora Boreal.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. GEOMÉTRICO */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:border-white/25 transition-all">
+                  <MicroLogo variant="geometric" size="lg" accentColor={activeCard.accentColor} />
+                  <div>
+                    <div className="text-xs font-bold text-white">02. Isotipo Geométrico</div>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Trazo tecnológico limpio con esquinas suaves y proporciones matemáticas.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. CIRCUIT NODE */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:border-white/25 transition-all">
+                  <MicroLogo variant="circuit" size="lg" accentColor={activeCard.accentColor} />
+                  <div>
+                    <div className="text-xs font-bold text-white">03. Circuit Node</div>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Terminal de circuito integrado: representa desarrollo de software y hardware.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4. MINIMALISTA OUTLINE */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:border-white/25 transition-all">
+                  <MicroLogo variant="minimal" size="lg" accentColor={activeCard.accentColor} />
+                  <div>
+                    <div className="text-xs font-bold text-white">04. Minimal Outline</div>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Línea pura sin rellenos densos, perfecta para señalética y favicons ligeros.
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
