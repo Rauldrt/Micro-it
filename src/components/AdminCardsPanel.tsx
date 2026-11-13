@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CardItem } from '../types';
 import { saveCard, deleteCard, seedInitialCards } from '../services/cardsService';
-import { isFirebaseConfigured, getFirebaseConfig } from '../lib/firebase';
+import { isFirebaseConfigured, getFirebaseConfig, getFirebaseAuth } from '../lib/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User 
+} from 'firebase/auth';
 import { 
   Plus, 
   Trash2, 
@@ -12,7 +18,10 @@ import {
   RefreshCw,
   ExternalLink,
   Layers,
-  Sparkles
+  Sparkles,
+  Lock,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 
 interface AdminCardsPanelProps {
@@ -26,10 +35,52 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
   onCardsChange,
   onClose
 }) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
   const [editingCard, setEditingCard] = useState<CardItem | null>(null);
   const [showConfig, setShowConfig] = useState<boolean>(!isFirebaseConfigured());
   const [loading, setLoading] = useState<boolean>(false);
   const [statusMsg, setStatusMsg] = useState<string>('');
+
+  // Escuchar estado de sesión de Firebase Auth
+  useEffect(() => {
+    const auth = getFirebaseAuth();
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setAuthError('Firebase no está configurado aún.');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      setAuthPassword('');
+    } catch (err: any) {
+      console.error(err);
+      setAuthError(err.message || 'Error al iniciar sesión.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    const auth = getFirebaseAuth();
+    if (!auth) return;
+    await signOut(auth);
+  };
 
   // Estados de configuración de Firebase
   const currentConfig = getFirebaseConfig();
@@ -130,7 +181,7 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 text-white pb-6">
-      {/* Barra de cabecera con estado de Firebase */}
+      {/* Barra de cabecera con estado de Firebase y Usuario Auth */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -140,11 +191,11 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold">Gestor de Tarjetas (Firestore)</h3>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${
-                isFirebaseConfigured() 
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                currentUser
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                   : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
               }`}>
-                {isFirebaseConfigured() ? 'Firebase Conectado' : 'Modo Local / Sin Conexión'}
+                {currentUser ? `Admin: ${currentUser.email}` : 'Acceso Restringido'}
               </span>
             </div>
             <p className="text-xs text-slate-400">
@@ -154,26 +205,92 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowConfig(!showConfig)}
-            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-slate-200 transition-all cursor-pointer"
-          >
-            {showConfig ? 'Ocultar Config' : 'Configurar Firebase'}
-          </button>
-
-          <button
-            onClick={handleNewCard}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg shadow-sky-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nueva Solución</span>
-          </button>
+          {currentUser ? (
+            <>
+              <button
+                onClick={handleNewCard}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg shadow-sky-500/20"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nueva Solución</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-semibold border border-rose-500/30 cursor-pointer"
+                title="Cerrar Sesión"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Salir</span>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setShowConfig(!showConfig)}
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-slate-200 transition-all cursor-pointer"
+            >
+              {showConfig ? 'Ocultar Config' : 'Configurar Firebase'}
+            </button>
+          )}
         </div>
       </div>
 
       {statusMsg && (
         <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 text-xs font-medium text-center animate-fade-in">
           {statusMsg}
+        </div>
+      )}
+
+      {/* Login Screen si no está autenticado */}
+      {!currentUser && (
+        <div className="p-6 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-4 shadow-2xl">
+          <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white">Inicio de Sesión Administrador</h4>
+              <p className="text-xs text-slate-400">Ingresá con tu usuario de Firebase Authentication para editar tarjetas</p>
+            </div>
+          </div>
+
+          {authError && (
+            <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-200 text-xs">
+              {authError}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-3">
+            <div className="text-xs">
+              <label className="text-slate-400 block mb-1">Correo Electrónico</label>
+              <input
+                type="email"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="admin@micro-it.com"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:border-amber-400 focus:outline-none"
+                required
+              />
+            </div>
+            <div className="text-xs">
+              <label className="text-slate-400 block mb-1">Contraseña</label>
+              <input
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:border-amber-400 focus:outline-none"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>{authLoading ? 'Iniciando sesión...' : 'Entrar al Panel de Control'}</span>
+            </button>
+          </form>
         </div>
       )}
 
@@ -260,8 +377,8 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
         </form>
       )}
 
-      {/* Editor de Tarjeta (Modal / Formulario) */}
-      {editingCard && (
+      {/* Editor de Tarjeta (Modal / Formulario) - Solo visible para usuario autenticado */}
+      {currentUser && editingCard && (
         <form onSubmit={handleSave} className="p-6 rounded-2xl bg-slate-900 border border-sky-500/40 space-y-4 shadow-2xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
@@ -423,22 +540,24 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setEditingCard(card)}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition-all cursor-pointer"
-                  title="Editar Tarjeta"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(card.id)}
-                  className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 transition-all cursor-pointer"
-                  title="Eliminar Tarjeta"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              {currentUser && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setEditingCard(card)}
+                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition-all cursor-pointer"
+                    title="Editar Tarjeta"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(card.id)}
+                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 transition-all cursor-pointer"
+                    title="Eliminar Tarjeta"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

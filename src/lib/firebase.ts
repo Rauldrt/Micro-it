@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Lee de variables de entorno (Vite: import.meta.env) con fallback a localStorage para fácil configuración visual
 const getEnvOrStorage = (key: string): string => {
@@ -35,4 +36,9 @@ export const getFirebaseApp = () => {
 export const getDb = () => {
   const app = getFirebaseApp();
   return app ? getFirestore(app) : null;
+};
+
+export const getFirebaseAuth = () => {
+  const app = getFirebaseApp();
+  return app ? getAuth(app) : null;
 };
