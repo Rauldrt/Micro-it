@@ -1,8 +1,125 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: cards
+    // Document ID: cardId (string, e.g., 'card-1', 'solution-1715000000')
+    //
+    // Fields:
+    //   - id: string (required, 1-64 chars, matches cardId, immutable on update)
+    //   - number: string (required, 1-10 chars, digits only, e.g., '01')
+    //   - title: string (required, 1-100 chars)
+    //   - subtitle: string (required, 1-150 chars)
+    //   - category: string (required, 1-60 chars)
+    //   - location: string (required, 1-60 chars)
+    //   - imageUrl: string (required, 10-1000 chars, valid HTTP/HTTPS URL)
+    //   - accentColor: string (required, 3-30 chars, hex/rgb/hsl string)
+    //   - gradient: string (required, 1-150 chars)
+    //   - glowColor: string (required, 3-50 chars)
+    //   - badgeBg: string (required, 1-100 chars)
+    //   - description: string (required, 1-500 chars)
+    //   - longDescription: string (required, 1-5000 chars)
+    //   - tags: list of strings (required, 0-15 items)
+    //   - specs: list of maps (required, 0-10 items with label & value)
+    //   - createdAt: timestamp (optional)
+    //   - updatedAt: timestamp (optional)
+    //
+    // ===============================================================
+
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions & Authorization
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Administrator verification: Checks custom token claim 'admin' or verified organizational email
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.get('admin', false) == true ||
+        (
+          request.auth.token.email != null &&
+          request.auth.token.email_verified == true &&
+          request.auth.token.email.matches(".*@(micro-it\\.com|microit\\.dev)$")
+        )
+      );
+    }
+
+    function isValidUrl(url) {
+      return url is string &&
+        url.size() >= 10 &&
+        url.size() <= 1000 &&
+        (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // ===============================================================
+    // Domain Validator: Cards
+    // ===============================================================
+
+    function isValidCard(data, docId) {
+      let requiredFields = [
+        'id', 'number', 'title', 'subtitle', 'category', 'location',
+        'imageUrl', 'accentColor', 'gradient', 'glowColor', 'badgeBg',
+        'description', 'longDescription', 'tags', 'specs'
+      ];
+      let allowedFields = [
+        'id', 'number', 'title', 'subtitle', 'category', 'location',
+        'imageUrl', 'accentColor', 'gradient', 'glowColor', 'badgeBg',
+        'description', 'longDescription', 'tags', 'specs',
+        'createdAt', 'updatedAt'
+      ];
+
+      return data.keys().hasAll(requiredFields) &&
+        data.keys().hasOnly(allowedFields) &&
+        data.id is string && data.id == docId && data.id.size() >= 1 && data.id.size() <= 64 &&
+        data.number is string && data.number.size() >= 1 && data.number.size() <= 10 && data.number.matches("^[0-9]+$") &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+        data.subtitle is string && data.subtitle.size() >= 1 && data.subtitle.size() <= 150 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
+        data.location is string && data.location.size() >= 1 && data.location.size() <= 60 &&
+        isValidUrl(data.imageUrl) &&
+        data.accentColor is string && data.accentColor.size() >= 3 && data.accentColor.size() <= 30 &&
+        data.gradient is string && data.gradient.size() >= 1 && data.gradient.size() <= 150 &&
+        data.glowColor is string && data.glowColor.size() >= 3 && data.glowColor.size() <= 50 &&
+        data.badgeBg is string && data.badgeBg.size() >= 1 && data.badgeBg.size() <= 100 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 500 &&
+        data.longDescription is string && data.longDescription.size() >= 1 && data.longDescription.size() <= 5000 &&
+        data.tags is list && data.tags.size() <= 15 &&
+        data.specs is list && data.specs.size() <= 10 &&
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
     match /cards/{cardId} {
-      allow read, write: if true;
+      // Public showcase read: allows visitors to list and get cards
+      allow read: if true;
+
+      // Production write access: Restricted to administrators with strict schema validation
+      // NOTE FOR INITIAL SETUP: If Firebase Auth is not yet integrated in the client app,
+      // you can temporarily replace 'isAdmin()' with 'true' during initial seeding/staging,
+      // but ensure 'isAdmin()' is reinstated before deploying to production.
+      allow create: if isAdmin() && isValidCard(request.resource.data, cardId);
+
+      allow update: if isAdmin() &&
+        isValidCard(request.resource.data, cardId) &&
+        request.resource.data.id == resource.data.id;
+
+      allow delete: if isAdmin();
     }
   }
 }
