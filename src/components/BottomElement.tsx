@@ -12,11 +12,14 @@ import {
   Touchpad, 
   ChevronRight,
   Layers,
-  Palette
+  Palette,
+  Database
 } from 'lucide-react';
 import { MicroLogo, LogoVariant } from './MicroLogo';
+import { AdminCardsPanel } from './AdminCardsPanel';
 
 interface BottomElementProps {
+  cards?: CardItem[];
   activeCard: CardItem;
   isExpanded: boolean;
   onCompress: () => void;
@@ -30,6 +33,7 @@ interface BottomElementProps {
 }
 
 export const BottomElement: React.FC<BottomElementProps> = ({
+  cards = [],
   activeCard,
   isExpanded,
   onCompress,
@@ -41,7 +45,7 @@ export const BottomElement: React.FC<BottomElementProps> = ({
   totalCards,
   onSelectCard
 }) => {
-  const [activeTab, setActiveTab] = useState<'details' | 'controls' | 'navigator' | 'branding'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'controls' | 'navigator' | 'branding' | 'admin'>('details');
 
   if (!isExpanded) return null;
 
@@ -151,6 +155,18 @@ export const BottomElement: React.FC<BottomElementProps> = ({
           >
             <Palette className="w-3.5 h-3.5" />
             <span>Variantes µ</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('admin')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'admin'
+                ? 'bg-amber-500/30 text-amber-300 shadow-sm border border-amber-500/40'
+                : 'text-amber-400/80 hover:text-amber-300'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-amber-400" />
+            <span>Admin Cards</span>
           </button>
         </motion.div>
 
@@ -363,6 +379,16 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'admin' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.28 }}
+            >
+              <AdminCardsPanel cards={cards} />
             </motion.div>
           )}
         </motion.div>

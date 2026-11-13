@@ -5,16 +5,29 @@ import { HeaderBar } from './components/HeaderBar';
 import { VerticalCarousel } from './components/VerticalCarousel';
 import { BottomElement } from './components/BottomElement';
 import { FullscreenCardModal } from './components/FullscreenCardModal';
+import { subscribeToCards } from './services/cardsService';
 
 export default function App() {
-  const [cards] = useState<CardItem[]>(CARDS_DATA);
+  const [cards, setCards] = useState<CardItem[]>(CARDS_DATA);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [activeModule, setActiveModule] = useState<ActiveModule>('carousel');
   const [fullscreenCard, setFullscreenCard] = useState<CardItem | null>(null);
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(4);
 
-  const activeCard = cards[currentIndex];
+  // Suscripción reactiva en tiempo real a Firestore (o respaldo local)
+  useEffect(() => {
+    const unsubscribe = subscribeToCards((updatedCards) => {
+      if (updatedCards && updatedCards.length > 0) {
+        setCards(updatedCards);
+        setCurrentIndex((prev) => (prev >= updatedCards.length ? 0 : prev));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const activeCard = cards[currentIndex] || cards[0] || CARDS_DATA[0];
 
   // Next and prev handlers
   const handleNextCard = useCallback(() => {
@@ -136,6 +149,7 @@ export default function App() {
 
           <div className="panel-content">
             <BottomElement
+              cards={cards}
               activeCard={activeCard}
               isExpanded={activeModule === 'bottomElement'}
               onCompress={() => setActiveModule('carousel')}
