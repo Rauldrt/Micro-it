@@ -19,20 +19,29 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const [isMuted, setIsMuted] = useState(true);
   const [scrollOffset, setScrollOffset] = useState(0);
 
+  // Coordenadas del cursor relativas al cuerpo del contenido para el halo interactivo
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 50, y: 30 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+  };
+
   // Listener de scroll directo y nativo sobre el contenedor del modal
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollOffset(e.currentTarget.scrollTop);
   };
 
-  // Cálculo reactivo para el Parallax
-  // A medida que scrolleamos hacia abajo, el Hero baja a velocidad reducida (0.35x) y se agranda levemente
-  const mediaY = scrollOffset * 0.35;
-  const mediaScale = 1 + Math.min(scrollOffset / 2000, 0.08);
-  const heroOpacity = Math.max(0.2, 1 - scrollOffset / 450);
+  // Parallax suave: parte de translateY = 0 en el tope de la pantalla para nunca recortar la cabecera del video
+  const mediaY = scrollOffset * 0.28;
+  const mediaScale = 1 + Math.min(scrollOffset / 3000, 0.05);
+  const heroOpacity = Math.max(0.15, 1 - scrollOffset / 500);
 
   // Cálculo reactivo para la Collapsing Toolbar (se revela entre 180px y 300px de scroll)
   const toolbarProgress = Math.min(Math.max((scrollOffset - 180) / 120, 0), 1);
-  const toolbarY = (1 - toolbarProgress) * -20; // emerge suave desde arriba
+  const toolbarY = (1 - toolbarProgress) * -20;
   const showToolbar = toolbarProgress > 0.02;
 
   // Listen for Escape key to close
@@ -138,14 +147,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           </div>
 
           {/* Hero Section con Parallax (Video / Imagen / GIF) */}
-          <div className="relative w-full h-[62vh] min-h-[420px] max-h-[720px] overflow-hidden bg-slate-950">
+          <div className="relative w-full h-[65vh] min-h-[440px] max-h-[760px] overflow-hidden bg-slate-950">
             <div 
               style={{
                 transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
+                transformOrigin: 'center top',
                 opacity: heroOpacity,
                 willChange: 'transform, opacity'
               }}
-              className="absolute -top-[12%] -bottom-[12%] inset-x-0 w-full h-[124%]"
+              className="absolute inset-x-0 top-0 bottom-[-15%] w-full h-[115%]"
             >
               {isVideo && videoSource ? (
                 <div className="relative w-full h-full">
@@ -156,10 +166,10 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                     loop
                     muted={isMuted}
                     playsInline
-                    className="w-full h-full object-cover object-center pointer-events-none"
+                    className="w-full h-full object-cover object-top pointer-events-none"
                   />
                   {/* Control Mute/Unmute para videos con audio */}
-                  <div className="absolute top-8 left-6 z-30">
+                  <div className="absolute top-6 left-6 z-30">
                     <button
                       type="button"
                       onClick={() => setIsMuted(!isMuted)}
@@ -185,15 +195,14 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   src={card.imageUrl}
                   alt={card.title}
                   accentColor={card.accentColor}
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-full object-cover object-top"
                 />
               )}
             </div>
 
-            {/* Gradient Overlays superiores e inferiores para suavizar transición */}
-            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950/80 to-transparent pointer-events-none" />
+            {/* Gradient Overlays elegantes (resaltan el texto inferior sin oscurecer ni recortar el tope del video) */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
-            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-40 mix-blend-multiply pointer-events-none`} />
+            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-30 mix-blend-multiply pointer-events-none`} />
 
             {/* Hero Text Content */}
             <div className="absolute bottom-0 inset-x-0 p-6 md:p-12 max-w-5xl mx-auto flex flex-col items-start gap-3 pointer-events-none">
@@ -230,11 +239,14 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </div>
           </div>
 
-          {/* Content Body con Fondo Técnico de Micro-it (Cuadrícula Blueprint & Resplandores Especulares) */}
-          <div className="relative flex-1 w-full bg-slate-950">
+          {/* Content Body con Fondo Técnico de Micro-it (Cuadrícula Blueprint & Resplandores Especulares Reactivos al Cursor) */}
+          <div 
+            onMouseMove={handleMouseMove}
+            className="relative flex-1 w-full bg-slate-950 overflow-hidden"
+          >
             {/* 1. Malla Geométrica Tecnológica (Blueprint Grid sutil) */}
             <div 
-              className="absolute inset-0 pointer-events-none opacity-[0.035]"
+              className="absolute inset-0 pointer-events-none opacity-[0.04]"
               style={{
                 backgroundImage: `
                   linear-gradient(to right, #ffffff 1px, transparent 1px),
@@ -244,13 +256,21 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
               }}
             />
 
-            {/* 2. Resplandor Ambiental Polar Reactivo al Color de la Solución */}
+            {/* 2. Spotlight Reactivo al Movimiento del Mouse (Efecto Linterna de Alta Tecnología) */}
             <div 
-              className="absolute top-10 left-1/2 -translate-x-1/2 w-[680px] h-[400px] pointer-events-none blur-[140px] opacity-25 rounded-full"
+              className="absolute inset-0 pointer-events-none transition-opacity duration-500 opacity-60"
+              style={{
+                background: `radial-gradient(650px circle at ${mousePos.x}% ${mousePos.y}%, ${card.accentColor}22 0%, transparent 70%)`
+              }}
+            />
+
+            {/* 3. Resplandor Ambiental Polar Reactivo al Color de la Solución (Base de Profundidad) */}
+            <div 
+              className="absolute top-10 left-1/2 -translate-x-1/2 w-[720px] h-[450px] pointer-events-none blur-[150px] opacity-25 rounded-full"
               style={{ backgroundColor: card.accentColor }}
             />
             <div 
-              className="absolute bottom-20 right-10 w-[420px] h-[320px] pointer-events-none blur-[160px] opacity-15 rounded-full bg-sky-500"
+              className="absolute bottom-20 right-10 w-[460px] h-[360px] pointer-events-none blur-[170px] opacity-15 rounded-full bg-sky-500"
             />
 
             {/* Contenedor Central con ancho contenido */}
