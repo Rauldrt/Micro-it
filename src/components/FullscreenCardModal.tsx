@@ -138,14 +138,14 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           </div>
 
           {/* Hero Section con Parallax (Video / Imagen / GIF) */}
-          <div className="relative w-full h-[58vh] min-h-[380px] max-h-[640px] overflow-hidden bg-slate-950">
+          <div className="relative w-full h-[62vh] min-h-[420px] max-h-[720px] overflow-hidden bg-slate-950">
             <div 
               style={{
                 transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
                 opacity: heroOpacity,
                 willChange: 'transform, opacity'
               }}
-              className="absolute inset-0 w-full h-full"
+              className="absolute -top-[12%] -bottom-[12%] inset-x-0 w-full h-[124%]"
             >
               {isVideo && videoSource ? (
                 <div className="relative w-full h-full">
@@ -156,14 +156,14 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                     loop
                     muted={isMuted}
                     playsInline
-                    className="w-full h-full object-cover pointer-events-none"
+                    className="w-full h-full object-cover object-center pointer-events-none"
                   />
                   {/* Control Mute/Unmute para videos con audio */}
-                  <div className="absolute top-6 left-6 z-30">
+                  <div className="absolute top-8 left-6 z-30">
                     <button
                       type="button"
                       onClick={() => setIsMuted(!isMuted)}
-                      className="p-2.5 rounded-full bg-slate-950/80 hover:bg-black text-white border border-white/20 backdrop-blur-md transition-all active:scale-90 cursor-pointer flex items-center gap-2 text-xs font-medium"
+                      className="p-2.5 rounded-full bg-slate-950/80 hover:bg-black text-white border border-white/20 backdrop-blur-md transition-all active:scale-90 cursor-pointer flex items-center gap-2 text-xs font-medium shadow-2xl"
                       title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
                     >
                       {isMuted ? (
@@ -185,14 +185,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   src={card.imageUrl}
                   alt={card.title}
                   accentColor={card.accentColor}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                 />
               )}
             </div>
 
-            {/* Gradient Overlays para legibilidad y elegancia */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent pointer-events-none" />
-            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-50 mix-blend-multiply pointer-events-none`} />
+            {/* Gradient Overlays superiores e inferiores para suavizar transición */}
+            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950/80 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
+            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-40 mix-blend-multiply pointer-events-none`} />
 
             {/* Hero Text Content */}
             <div className="absolute bottom-0 inset-x-0 p-6 md:p-12 max-w-5xl mx-auto flex flex-col items-start gap-3 pointer-events-none">
@@ -229,91 +230,127 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </div>
           </div>
 
-          {/* Content Body */}
-          <div className="flex-1 max-w-5xl w-full mx-auto px-6 py-8 md:py-12 space-y-10">
-            {/* Spec Cards Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {card.specs.map((spec, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-sm flex flex-col gap-1 hover:border-white/20 transition-colors"
-                >
-                  <span className="text-xs uppercase tracking-wider text-slate-400 font-mono">
-                    {spec.label}
-                  </span>
-                  <span 
-                    className="text-lg font-bold"
-                    style={{ color: card.accentColor }}
-                  >
-                    {spec.value}
-                  </span>
-                </div>
-              ))}
-            </div>
+          {/* Content Body con Fondo Técnico de Micro-it (Cuadrícula Blueprint & Resplandores Especulares) */}
+          <div className="relative flex-1 w-full bg-slate-950">
+            {/* 1. Malla Geométrica Tecnológica (Blueprint Grid sutil) */}
+            <div 
+              className="absolute inset-0 pointer-events-none opacity-[0.035]"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, #ffffff 1px, transparent 1px),
+                  linear-gradient(to bottom, #ffffff 1px, transparent 1px)
+                `,
+                backgroundSize: '48px 48px'
+              }}
+            />
 
-            {/* Detailed Overview con Renderizador Interactivo & Tablas Glassmorphism */}
-            <div className="p-6 md:p-10 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-md space-y-6 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <div className="flex items-center gap-2.5 text-xs md:text-sm font-bold tracking-wider uppercase text-slate-300">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Propuesta de Valor & Especificaciones</span>
-                </div>
-                <span 
-                  className="px-2.5 py-1 rounded-full text-[10px] font-mono border"
-                  style={{ 
-                    color: card.accentColor,
-                    borderColor: `${card.accentColor}40`,
-                    backgroundColor: `${card.accentColor}15`
-                  }}
-                >
-                  {card.category}
-                </span>
-              </div>
+            {/* 2. Resplandor Ambiental Polar Reactivo al Color de la Solución */}
+            <div 
+              className="absolute top-10 left-1/2 -translate-x-1/2 w-[680px] h-[400px] pointer-events-none blur-[140px] opacity-25 rounded-full"
+              style={{ backgroundColor: card.accentColor }}
+            />
+            <div 
+              className="absolute bottom-20 right-10 w-[420px] h-[320px] pointer-events-none blur-[160px] opacity-15 rounded-full bg-sky-500"
+            />
 
-              {/* Contenido estilizado dinámicamente con Markdown: viñetas como cards, tablas, badges y callouts */}
-              <FormattedDescription 
-                content={card.longDescription} 
-                accentColor={card.accentColor} 
-              />
-
-              <div className="pt-4 flex flex-wrap gap-2 border-t border-white/10">
-                {card.tags.map((tag, idx) => (
-                  <span
+            {/* Contenedor Central con ancho contenido */}
+            <div className="relative z-10 max-w-5xl w-full mx-auto px-6 py-8 md:py-14 space-y-12">
+              {/* Spec Cards Grid con Acentos Vivos & Glassmorphism Reforzado */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {card.specs.map((spec, idx) => (
+                  <div
                     key={idx}
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-slate-300 hover:border-white/20 transition-colors"
+                    className="group relative p-4 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/80 border border-white/10 hover:border-white/25 backdrop-blur-md flex flex-col gap-1.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl overflow-hidden"
                   >
-                    #{tag}
-                  </span>
+                    {/* Borde superior tenue con el acento de la card */}
+                    <div 
+                      className="absolute top-0 inset-x-0 h-[2px] opacity-40 group-hover:opacity-100 transition-opacity"
+                      style={{ backgroundColor: card.accentColor }}
+                    />
+                    <span className="text-[11px] uppercase tracking-wider text-slate-400 font-mono flex items-center justify-between">
+                      <span>{spec.label}</span>
+                      <span className="w-1 h-1 rounded-full opacity-60 group-hover:scale-150 transition-transform" style={{ backgroundColor: card.accentColor }} />
+                    </span>
+                    <span 
+                      className="text-lg md:text-xl font-black tracking-tight"
+                      style={{ color: card.accentColor }}
+                    >
+                      {spec.value}
+                    </span>
+                  </div>
                 ))}
               </div>
-            </div>
 
-            {/* Action Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/10 pb-8">
-              <div className="flex items-center gap-3">
-                <button 
-                  className="flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm text-slate-950 transition-all hover:brightness-110 active:scale-95 shadow-lg cursor-pointer"
+              {/* Detailed Overview con Renderizador Interactivo & Tablas Glassmorphism */}
+              <div className="relative p-6 md:p-10 rounded-3xl bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 border border-white/15 backdrop-blur-xl space-y-6 shadow-2xl overflow-hidden">
+                {/* Destello sutil en esquina superior izquierda */}
+                <div 
+                  className="absolute -top-16 -left-16 w-32 h-32 rounded-full blur-2xl opacity-20 pointer-events-none"
                   style={{ backgroundColor: card.accentColor }}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Explorar Experiencia</span>
-                </button>
+                />
 
-                <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer">
-                  <Bookmark className="w-4 h-4" />
-                </button>
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-2.5 text-xs md:text-sm font-bold tracking-wider uppercase text-slate-200">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Propuesta de Valor & Especificaciones</span>
+                  </div>
+                  <span 
+                    className="px-3 py-1 rounded-full text-[11px] font-mono font-bold border shadow-sm"
+                    style={{ 
+                      color: card.accentColor,
+                      borderColor: `${card.accentColor}50`,
+                      backgroundColor: `${card.accentColor}18`
+                    }}
+                  >
+                    {card.category}
+                  </span>
+                </div>
 
-                <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer">
-                  <Share2 className="w-4 h-4" />
-                </button>
+                {/* Contenido estilizado dinámicamente con Markdown */}
+                <FormattedDescription 
+                  content={card.longDescription} 
+                  accentColor={card.accentColor} 
+                />
+
+                <div className="pt-4 flex flex-wrap gap-2 border-t border-white/10">
+                  {card.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-white/5 border border-white/10 text-slate-300 hover:border-white/20 hover:text-white transition-all cursor-default"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </div>
 
-              <button
-                onClick={onClose}
-                className="text-xs text-slate-400 hover:text-white underline underline-offset-4 transition-colors cursor-pointer"
-              >
-                Cerrar vista completa (Esc)
-              </button>
+              {/* Action Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/10 pb-8">
+                <div className="flex items-center gap-3">
+                  <button 
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-slate-950 transition-all hover:brightness-110 active:scale-95 shadow-xl cursor-pointer"
+                    style={{ backgroundColor: card.accentColor }}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Explorar Experiencia</span>
+                  </button>
+
+                  <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer">
+                    <Bookmark className="w-4 h-4" />
+                  </button>
+
+                  <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer">
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <button
+                  onClick={onClose}
+                  className="text-xs text-slate-400 hover:text-white underline underline-offset-4 transition-colors cursor-pointer"
+                >
+                  Cerrar vista completa (Esc)
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
