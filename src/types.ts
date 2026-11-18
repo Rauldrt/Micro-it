@@ -6,6 +6,8 @@ export interface CardItem {
   category: string;
   location: string;
   imageUrl: string;
+  mediaType?: 'image' | 'video' | 'gif';
+  videoUrl?: string;
   accentColor: string;
   gradient: string;
   glowColor: string;

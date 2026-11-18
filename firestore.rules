@@ -75,7 +75,7 @@ service cloud.firestore {
       ];
       let allowedFields = [
         'id', 'number', 'title', 'subtitle', 'category', 'location',
-        'imageUrl', 'accentColor', 'gradient', 'glowColor', 'badgeBg',
+        'imageUrl', 'mediaType', 'videoUrl', 'accentColor', 'gradient', 'glowColor', 'badgeBg',
         'description', 'longDescription', 'tags', 'specs',
         'createdAt', 'updatedAt'
       ];
@@ -89,6 +89,8 @@ service cloud.firestore {
         data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
         data.location is string && data.location.size() >= 1 && data.location.size() <= 60 &&
         isValidUrl(data.imageUrl) &&
+        (!('mediaType' in data) || data.mediaType in ['image', 'video', 'gif']) &&
+        (!('videoUrl' in data) || data.videoUrl is string) &&
         data.accentColor is string && data.accentColor.size() >= 3 && data.accentColor.size() <= 30 &&
         data.gradient is string && data.gradient.size() >= 1 && data.gradient.size() <= 150 &&
         data.glowColor is string && data.glowColor.size() >= 3 && data.glowColor.size() <= 50 &&

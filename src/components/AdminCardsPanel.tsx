@@ -458,13 +458,40 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="text-slate-400 block mb-1">Tipo de Fondo Encabezado</label>
+              <select
+                value={editingCard.mediaType || 'image'}
+                onChange={(e) => setEditingCard({ ...editingCard, mediaType: e.target.value as 'image' | 'video' | 'gif' })}
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-medium focus:border-sky-400 focus:outline-none"
+              >
+                <option value="image" className="bg-slate-900 text-white">Imagen Estática (JPG, PNG, WebP)</option>
+                <option value="video" className="bg-slate-900 text-white">Video con Parallax & Audio (MP4, WebM)</option>
+                <option value="gif" className="bg-slate-900 text-white">GIF Animado</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-slate-400 block mb-1">URL de Video / GIF (opcional para Video)</label>
+              <input 
+                type="text" 
+                value={editingCard.videoUrl || ''} 
+                onChange={(e) => setEditingCard({ ...editingCard, videoUrl: e.target.value })} 
+                placeholder="https://... o /videos/demo.mp4"
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-mono"
+              />
+            </div>
+          </div>
+
           <div className="text-xs">
-            <label className="text-slate-400 block mb-1">URL de Imagen de Fondo</label>
+            <label className="text-slate-400 block mb-1">
+              URL de Imagen de Fondo {editingCard.mediaType === 'video' ? '(o Poster previo del Video)' : ''}
+            </label>
             <input 
               type="text" 
               value={editingCard.imageUrl} 
               onChange={(e) => setEditingCard({ ...editingCard, imageUrl: e.target.value })} 
-              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-mono"
               required
             />
           </div>

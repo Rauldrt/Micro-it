@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
 
@@ -13,6 +13,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   card,
   onClose
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
+
+  // Parallax del Hero Media al scrollear el contenido
+  const { scrollY } = useScroll({ container: containerRef });
+  const mediaY = useTransform(scrollY, [0, 500], [0, 140]);
+  const mediaScale = useTransform(scrollY, [-200, 0, 500], [1.15, 1, 1.05]);
+  const heroOpacity = useTransform(scrollY, [0, 380], [1, 0.4]);
+
   // Listen for Escape key to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,11 +37,16 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     };
   }, [card, onClose]);
 
+  // Detectar si el recurso es video o gif
+  const isVideo = card?.mediaType === 'video' || (card?.videoUrl && card.videoUrl.trim() !== '') || (card?.imageUrl && (card.imageUrl.endsWith('.mp4') || card.imageUrl.endsWith('.webm')));
+  const videoSource = card?.videoUrl || (isVideo ? card?.imageUrl : '');
+
   return (
     <AnimatePresence>
       {card && (
         <motion.div
           key={card.id}
+          ref={containerRef}
           // Simultaneous top & bottom vertical stretch animation without altering width
           initial={{ 
             clipPath: 'inset(36% 0% 36% 0%)',
@@ -68,22 +82,62 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </button>
           </div>
 
-          {/* Hero Image Section */}
-          <div className="relative w-full h-[55vh] min-h-[360px] max-h-[600px] overflow-hidden">
-            <LazyImage
-              src={card.imageUrl}
-              alt={card.title}
-              accentColor={card.accentColor}
-              className="w-full h-full object-cover"
-            />
+          {/* Hero Section con Parallax (Video / Imagen / GIF) */}
+          <div className="relative w-full h-[58vh] min-h-[380px] max-h-[640px] overflow-hidden bg-slate-950">
+            <motion.div 
+              style={{ y: mediaY, scale: mediaScale, opacity: heroOpacity }}
+              className="absolute inset-0 w-full h-full will-change-transform"
+            >
+              {isVideo && videoSource ? (
+                <div className="relative w-full h-full">
+                  <video
+                    src={videoSource}
+                    poster={card.imageUrl}
+                    autoPlay
+                    loop
+                    muted={isMuted}
+                    playsInline
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                  {/* Control Mute/Unmute para videos con audio */}
+                  <div className="absolute top-6 left-6 z-30">
+                    <button
+                      type="button"
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="p-2.5 rounded-full bg-slate-950/80 hover:bg-black text-white border border-white/20 backdrop-blur-md transition-all active:scale-90 cursor-pointer flex items-center gap-2 text-xs font-medium"
+                      title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+                    >
+                      {isMuted ? (
+                        <>
+                          <VolumeX className="w-4 h-4 text-rose-400" />
+                          <span className="hidden sm:inline">Activar Sonido</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-4 h-4 text-emerald-400" />
+                          <span className="hidden sm:inline">Sonido Activo</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <LazyImage
+                  src={card.imageUrl}
+                  alt={card.title}
+                  accentColor={card.accentColor}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </motion.div>
 
-            {/* Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-60 mix-blend-multiply`} />
+            {/* Gradient Overlays para legibilidad y elegancia */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent pointer-events-none" />
+            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-50 mix-blend-multiply pointer-events-none`} />
 
             {/* Hero Text Content */}
-            <div className="absolute bottom-0 inset-x-0 p-6 md:p-12 max-w-5xl mx-auto flex flex-col items-start gap-3">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="absolute bottom-0 inset-x-0 p-6 md:p-12 max-w-5xl mx-auto flex flex-col items-start gap-3 pointer-events-none">
+              <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full border backdrop-blur-md ${card.badgeBg}`}>
                   {card.category}
                 </span>
@@ -91,6 +145,11 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   <MapPin className="w-3.5 h-3.5 text-rose-400" />
                   {card.location}
                 </span>
+                {isVideo && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] font-mono uppercase tracking-wider">
+                    Video Demo
+                  </span>
+                )}
               </div>
 
               <div className="flex items-baseline gap-4">
