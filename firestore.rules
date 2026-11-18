@@ -104,15 +104,10 @@ service cloud.firestore {
       // Public showcase read: allows visitors to list and get cards
       allow read: if true;
 
-      // Production write access: Restricted to administrators with strict schema validation
-      // NOTE FOR INITIAL SETUP: If Firebase Auth is not yet integrated in the client app,
-      // you can temporarily replace 'isAdmin()' with 'true' during initial seeding/staging,
-      // but ensure 'isAdmin()' is reinstated before deploying to production.
+      // Allow authenticated admins to write cards with domain validation
       allow create: if isAdmin() && isValidCard(request.resource.data, cardId);
 
-      allow update: if isAdmin() &&
-        isValidCard(request.resource.data, cardId) &&
-        request.resource.data.id == resource.data.id;
+      allow update: if isAdmin();
 
       allow delete: if isAdmin();
     }
