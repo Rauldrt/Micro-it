@@ -189,17 +189,19 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
     e.preventDefault();
     if (!editingCard) return;
     setLoading(true);
+    setStatusMsg('');
     try {
       await saveCard(editingCard);
-      setStatusMsg('Tarjeta guardada exitosamente.');
+      setStatusMsg('¡Tarjeta guardada exitosamente en Firestore!');
       setEditingCard(null);
       if (onCardsChange) onCardsChange();
-    } catch (err) {
-      console.error(err);
-      setStatusMsg('Error al guardar tarjeta.');
+    } catch (err: any) {
+      console.error('Error detallado al guardar en Firestore:', err);
+      alert(`Error al guardar en Firestore: ${err?.message || err}`);
+      setStatusMsg(`Error al guardar: ${err?.message || 'Error de permisos o conexión'}`);
     } finally {
       setLoading(false);
-      setTimeout(() => setStatusMsg(''), 3000);
+      setTimeout(() => setStatusMsg(''), 4000);
     }
   };
 

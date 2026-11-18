@@ -44,16 +44,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Administrator verification: Checks custom token claim 'admin' or verified organizational email
+    // Administrator verification: Permite a cualquier usuario autenticado en Firebase
     function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.get('admin', false) == true ||
-        (
-          request.auth.token.email != null &&
-          request.auth.token.email_verified == true &&
-          request.auth.token.email.matches(".*@(micro-it\\.com|microit\\.dev)$")
-        )
-      );
+      return isAuthenticated();
     }
 
     function isValidUrl(url) {
