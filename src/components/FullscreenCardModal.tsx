@@ -37,10 +37,10 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   // Parallax cinematográfico a paso 2:1 (por cada 2 pasos de scroll, el video se mueve 1)
   const mediaY = scrollOffset * 0.5;
   const mediaScale = 1 + Math.min(scrollOffset / 4000, 0.04);
-  const heroOpacity = Math.max(0.12, 1 - scrollOffset / 800);
+  const heroOpacity = Math.max(0.15, 1 - scrollOffset / 900);
 
-  // Cálculo reactivo para la Collapsing Toolbar (se revela entre 150px y 280px de scroll)
-  const toolbarProgress = Math.min(Math.max((scrollOffset - 150) / 130, 0), 1);
+  // Cálculo reactivo para la Collapsing Toolbar (se revela a medida que el título del pie del video llega al tope)
+  const toolbarProgress = Math.min(Math.max((scrollOffset - 280) / 160, 0), 1);
   const toolbarY = (1 - toolbarProgress) * -20;
   const showToolbar = toolbarProgress > 0.02;
 
@@ -154,6 +154,20 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                     <h2 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
                       {card.title}
                     </h2>
+                    {isVideo && (
+                      <button
+                        type="button"
+                        onClick={() => setIsMuted(!isMuted)}
+                        className="pointer-events-auto ml-2 p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 cursor-pointer"
+                        title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+                      >
+                        {isMuted ? (
+                          <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                        )}
+                      </button>
+                    )}
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
                     {card.subtitle}
@@ -166,31 +180,8 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </div>
           </div>
 
-          {/* 3. BOTONES FLOTANTES SUPERIORES (Audio & Salir) */}
-          <div className="sticky top-3.5 z-50 flex items-center justify-between px-4 md:px-8 pointer-events-none h-0">
-            {/* Control Audio */}
-            {isVideo ? (
-              <button
-                type="button"
-                onClick={() => setIsMuted(!isMuted)}
-                className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/85 hover:bg-black text-white text-xs font-semibold border border-white/20 backdrop-blur-md flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xl"
-                title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
-              >
-                {isMuted ? (
-                  <>
-                    <VolumeX className="w-3.5 h-3.5 text-rose-400" />
-                    <span className="hidden sm:inline">Activar Sonido</span>
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="hidden sm:inline">Sonido Activo</span>
-                  </>
-                )}
-              </button>
-            ) : <div />}
-
-            {/* Salir */}
+          {/* 3. BOTÓN FLOTANTE SALIR (Esc) - Despejado y limpio en el tope */}
+          <div className="sticky top-3.5 z-50 flex justify-end px-4 md:px-8 pointer-events-none h-0">
             <button
               onClick={onClose}
               className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
@@ -201,16 +192,16 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </button>
           </div>
 
-          {/* 4. ESCENARIO PARALLAX 2:1 (El video se mueve a 1 paso por cada 2 pasos de scroll, con bordes difuminados sin cortes) */}
-          <div className="absolute inset-x-0 top-0 h-[82vh] min-h-[540px] max-h-[880px] overflow-hidden pointer-events-none z-10">
+          {/* 4. ESCENARIO PARALLAX 2:1 (El video tiene protagonismo total, sin cortes y con movimiento a medio paso) */}
+          <div className="absolute inset-x-0 top-0 h-[80vh] min-h-[520px] max-h-[860px] overflow-hidden pointer-events-none z-10">
             <div 
               style={{
                 transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
                 transformOrigin: 'center top',
                 willChange: 'transform, opacity',
                 opacity: heroOpacity,
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 72%, transparent 100%)',
-                maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 72%, transparent 100%)'
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 72%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 72%, transparent 100%)'
               }}
               className="relative w-full h-full flex items-center justify-center"
             >
@@ -222,38 +213,39 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   loop
                   muted={isMuted}
                   playsInline
-                  className="w-full h-full object-cover object-top pointer-events-none opacity-90"
+                  className="w-full h-full object-cover object-top pointer-events-none opacity-95"
                 />
               ) : (
                 <LazyImage
                   src={card.imageUrl}
                   alt={card.title}
                   accentColor={card.accentColor}
-                  className="w-full h-full object-cover object-top opacity-90"
+                  className="w-full h-full object-cover object-top opacity-95"
                 />
               )}
 
               {/* Viñeta lateral suave para que tampoco se corte en pantallas ultra-anchas */}
               <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80 pointer-events-none" />
-              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-25 mix-blend-multiply pointer-events-none`} />
+              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-20 mix-blend-multiply pointer-events-none`} />
             </div>
           </div>
 
-          {/* 5. CAPA DE ELEMENTOS EN SCROLL (Avanza a velocidad normal 1.0x por encima del video) */}
+          {/* 5. CAPA DE ELEMENTOS EN SCROLL (Ubicados al pie del video para darle protagonismo absoluto) */}
           <div className="relative z-20 w-full min-h-screen">
-            {/* Hero Text Content flotante sobre el video */}
+            {/* Hero Text & Badges: Inician al pie del video (a ~56vh / 62vh) dejando el reproductor completamente limpio */}
             <div 
               style={{
-                opacity: Math.max(0, 1 - scrollOffset / 320),
-                transform: `translate3d(0, ${scrollOffset * -0.15}px, 0)`
+                opacity: Math.max(0, 1 - scrollOffset / 420),
+                transform: `translate3d(0, ${scrollOffset * -0.12}px, 0)`
               }}
-              className="pt-[22vh] md:pt-[28vh] pb-12 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
+              className="pt-[54vh] md:pt-[60vh] pb-8 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
             >
-              <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
+              {/* Badges y Control de Sonido ubicados juntos al pie del video */}
+              <div className="flex flex-wrap items-center gap-2.5 pointer-events-auto">
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full border backdrop-blur-md ${card.badgeBg}`}>
                   {card.category}
                 </span>
-                <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-black/40 text-slate-200 border border-white/10 backdrop-blur-md">
+                <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-black/50 text-slate-200 border border-white/10 backdrop-blur-md">
                   <MapPin className="w-3.5 h-3.5 text-rose-400" />
                   {card.location}
                 </span>
@@ -261,6 +253,27 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] font-mono uppercase tracking-wider">
                     Video Demo
                   </span>
+                )}
+                {/* Control de Audio reubicado al pie del video junto a las etiquetas */}
+                {isVideo && (
+                  <button
+                    type="button"
+                    onClick={() => setIsMuted(!isMuted)}
+                    className="px-3.5 py-1 rounded-full bg-slate-900/90 hover:bg-black text-white border border-white/20 backdrop-blur-md flex items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg hover:border-white/40"
+                    title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+                  >
+                    {isMuted ? (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Activar Sonido</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-300">Sonido Activo</span>
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
 
@@ -271,12 +284,12 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 >
                   {card.number}
                 </span>
-                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-xl">
+                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-2xl">
                   {card.title}
                 </h1>
               </div>
 
-              <p className="text-lg md:text-xl text-slate-200 font-light max-w-2xl drop-shadow">
+              <p className="text-lg md:text-xl text-slate-200 font-light max-w-2xl drop-shadow-md">
                 {card.subtitle}
               </p>
             </div>
