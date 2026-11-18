@@ -34,10 +34,10 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     setScrollOffset(e.currentTarget.scrollTop);
   };
 
-  // Parallax cinematográfico a paso 2:1 (por cada 2 pasos de scroll, el video se mueve 1)
-  const mediaY = scrollOffset * 0.5;
-  const mediaScale = 1 + Math.min(scrollOffset / 4000, 0.04);
-  const heroOpacity = Math.max(0.15, 1 - scrollOffset / 900);
+  // Parallax cinematográfico a paso 3:1 (por cada 3 pasos de los elementos, el fondo se mueve 1)
+  const mediaY = scrollOffset * (2 / 3);
+  const mediaScale = 1 + Math.min(scrollOffset / 5000, 0.04);
+  const heroOpacity = Math.max(0.12, 1 - scrollOffset / 1100);
 
   // Cálculo reactivo para la Collapsing Toolbar (se revela a medida que el título del pie del video llega al tope)
   const toolbarProgress = Math.min(Math.max((scrollOffset - 360) / 160, 0), 1);
@@ -192,8 +192,8 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </button>
           </div>
 
-          {/* 4. ESCENARIO PARALLAX 2:1 (El video tiene protagonismo total, sin cortes y con movimiento a medio paso) */}
-          <div className="absolute inset-x-0 top-0 h-[86vh] min-h-[580px] max-h-[920px] overflow-hidden pointer-events-none z-10">
+          {/* 4. ESCENARIO PARALLAX 3:1 (El video se mueve a 1 paso por cada 3 pasos de los elementos) */}
+          <div className="absolute inset-x-0 top-0 h-[88vh] min-h-[600px] max-h-[940px] overflow-hidden pointer-events-none z-10">
             <div 
               style={{
                 transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
