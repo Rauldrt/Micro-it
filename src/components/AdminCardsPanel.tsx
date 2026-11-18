@@ -21,8 +21,12 @@ import {
   Sparkles,
   Lock,
   LogOut,
-  UserCheck
+  UserCheck,
+  Upload,
+  Film,
+  Loader2
 } from 'lucide-react';
+import { uploadSolutionMedia, VideoProcessingProgress } from '../services/mediaUploadService';
 
 interface AdminCardsPanelProps {
   cards: CardItem[];
@@ -45,6 +49,57 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
   const [showConfig, setShowConfig] = useState<boolean>(!isFirebaseConfigured());
   const [loading, setLoading] = useState<boolean>(false);
   const [statusMsg, setStatusMsg] = useState<string>('');
+
+  // Estado para el proceso de subida y optimización de video
+  const [uploadProgress, setUploadProgress] = useState<VideoProcessingProgress | null>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState<boolean>(false);
+
+  const handleVideoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingCard) return;
+
+    // Validación de formato
+    if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|mkv)$/i)) {
+      alert('Por favor selecciona un archivo de video válido (MP4 o WebM).');
+      return;
+    }
+
+    setIsUploadingMedia(true);
+    setUploadProgress({
+      step: 'reading',
+      percent: 5,
+      message: 'Preparando archivo de video...'
+    });
+
+    try {
+      const { videoUrl, posterUrl } = await uploadSolutionMedia(
+        editingCard.id,
+        file,
+        (progress) => setUploadProgress(progress)
+      );
+
+      // Auto-vincular URLs y setear tipo de media a video
+      setEditingCard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          mediaType: 'video',
+          videoUrl: videoUrl,
+          imageUrl: posterUrl
+        };
+      });
+
+      setStatusMsg('¡Video y portada optimizados y subidos exitosamente!');
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error al procesar y subir video: ${err.message || err}`);
+    } finally {
+      setIsUploadingMedia(false);
+      setTimeout(() => setUploadProgress(null), 4000);
+      // Reset input
+      e.target.value = '';
+    }
+  };
 
   // Escuchar estado de sesión de Firebase Auth
   useEffect(() => {
@@ -472,15 +527,71 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
               </select>
             </div>
             <div>
-              <label className="text-slate-400 block mb-1">URL de Video / GIF (opcional para Video)</label>
+              <label className="text-slate-400 block mb-1">URL de Video / GIF</label>
               <input 
                 type="text" 
                 value={editingCard.videoUrl || ''} 
                 onChange={(e) => setEditingCard({ ...editingCard, videoUrl: e.target.value })} 
-                placeholder="https://... o /videos/demo.mp4"
+                placeholder="https://... o sube uno abajo"
                 className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-mono"
               />
             </div>
+          </div>
+
+          {/* Subida & Optimización Directa de Video a Firebase Storage */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-sky-500/30 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Film className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-bold text-white">Subir Video con Optimización Web & Portada Automática</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">MP4 / WebM</span>
+            </div>
+
+            <p className="text-[11px] text-slate-300 leading-snug">
+              Selecciona tu video: se extraerá automáticamente un fotograma HD como póster de portada y se subirá optimizado a Firebase Storage con enlace CDN global permanente.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                isUploadingMedia
+                  ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
+                  : 'bg-sky-500 hover:bg-sky-400 text-slate-950 active:scale-95 shadow-lg shadow-sky-500/20'
+              }`}>
+                {isUploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                <span>{isUploadingMedia ? 'Procesando Video...' : 'Seleccionar Video desde tu PC'}</span>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  disabled={isUploadingMedia}
+                  onChange={handleVideoFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {editingCard.videoUrl && (
+                <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-mono truncate max-w-xs">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Video vinculado</span>
+                </span>
+              )}
+            </div>
+
+            {/* Barra de progreso de optimización y subida */}
+            {uploadProgress && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between text-[11px] font-mono">
+                  <span className="text-sky-300">{uploadProgress.message}</span>
+                  <span className="text-slate-400 font-bold">{uploadProgress.percent}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-300 rounded-full"
+                    style={{ width: `${uploadProgress.percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="text-xs">

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
 // Configuración canónica pública de Firebase para Micro-it Studio
 // En aplicaciones cliente web (SPA), la configuración de Firebase es pública por diseño de Google.
@@ -47,4 +48,9 @@ export const getDb = () => {
 export const getFirebaseAuth = () => {
   const app = getFirebaseApp();
   return app ? getAuth(app) : null;
+};
+
+export const getFirebaseStorage = () => {
+  const app = getFirebaseApp();
+  return app ? getStorage(app) : null;
 };
