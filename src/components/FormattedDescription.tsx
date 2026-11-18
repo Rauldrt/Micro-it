@@ -19,7 +19,7 @@ interface FormattedDescriptionProps {
   accentColor?: string;
 }
 
-export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({
+export const FormattedDescription: React.FC<FormattedDescriptionProps> = React.memo(({
   content,
   accentColor = '#38bdf8'
 }) => {
@@ -190,4 +190,4 @@ export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({
       </ReactMarkdown>
     </div>
   );
-};
+});
