@@ -4,6 +4,7 @@ import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, Volume2, VolumeX }
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
 import { MicroLogo } from './MicroLogo';
+import { FormattedDescription } from './FormattedDescription';
 
 interface FullscreenCardModalProps {
   card: CardItem | null;
@@ -250,22 +251,36 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
               ))}
             </div>
 
-            {/* Detailed Overview */}
-            <div className="p-6 md:p-8 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-md space-y-4">
-              <div className="flex items-center gap-2 text-sm font-semibold tracking-wider uppercase text-slate-400">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Descripción Detallada</span>
+            {/* Detailed Overview con Renderizador Interactivo & Tablas Glassmorphism */}
+            <div className="p-6 md:p-10 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-md space-y-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2.5 text-xs md:text-sm font-bold tracking-wider uppercase text-slate-300">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Propuesta de Valor & Especificaciones</span>
+                </div>
+                <span 
+                  className="px-2.5 py-1 rounded-full text-[10px] font-mono border"
+                  style={{ 
+                    color: card.accentColor,
+                    borderColor: `${card.accentColor}40`,
+                    backgroundColor: `${card.accentColor}15`
+                  }}
+                >
+                  {card.category}
+                </span>
               </div>
 
-              <p className="text-base md:text-lg text-slate-300 leading-relaxed font-normal">
-                {card.longDescription}
-              </p>
+              {/* Contenido estilizado dinámicamente con Markdown: viñetas como cards, tablas, badges y callouts */}
+              <FormattedDescription 
+                content={card.longDescription} 
+                accentColor={card.accentColor} 
+              />
 
-              <div className="pt-4 flex flex-wrap gap-2">
+              <div className="pt-4 flex flex-wrap gap-2 border-t border-white/10">
                 {card.tags.map((tag, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-slate-300"
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-slate-300 hover:border-white/20 transition-colors"
                   >
                     #{tag}
                   </span>
