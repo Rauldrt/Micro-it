@@ -16,16 +16,23 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
-  // Parallax del Hero Media al scrollear el contenido
-  const { scrollY } = useScroll({ container: containerRef });
-  const mediaY = useTransform(scrollY, [0, 500], [0, 140]);
-  const mediaScale = useTransform(scrollY, [-200, 0, 500], [1.15, 1, 1.05]);
-  const heroOpacity = useTransform(scrollY, [0, 380], [1, 0.4]);
+  // Listener de scroll directo y nativo sobre el contenedor del modal
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollOffset(e.currentTarget.scrollTop);
+  };
 
-  // Collapsing Toolbar animations al ocultarse el encabezado (entre 220px y 360px de scroll)
-  const toolbarOpacity = useTransform(scrollY, [200, 320], [0, 1]);
-  const toolbarY = useTransform(scrollY, [200, 320], [-25, 0]);
+  // Cálculo reactivo para el Parallax
+  // A medida que scrolleamos hacia abajo, el Hero baja a velocidad reducida (0.35x) y se agranda levemente
+  const mediaY = scrollOffset * 0.35;
+  const mediaScale = 1 + Math.min(scrollOffset / 2000, 0.08);
+  const heroOpacity = Math.max(0.2, 1 - scrollOffset / 450);
+
+  // Cálculo reactivo para la Collapsing Toolbar (se revela entre 180px y 300px de scroll)
+  const toolbarProgress = Math.min(Math.max((scrollOffset - 180) / 120, 0), 1);
+  const toolbarY = (1 - toolbarProgress) * -20; // emerge suave desde arriba
+  const showToolbar = toolbarProgress > 0.02;
 
   // Listen for Escape key to close
   useEffect(() => {
@@ -74,15 +81,21 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             ease: [0.16, 1, 0.3, 1] // Smooth deceleration curve at the end
           }}
           className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto scrollbar-none"
+          onScroll={handleScroll}
         >
           {/* Collapsing Toolbar flotante: Se revela con blur al ocultarse el Hero en scroll */}
           <div className="sticky top-0 z-40 w-full pointer-events-none h-0 overflow-visible">
-            <motion.div
-              style={{ opacity: toolbarOpacity, y: toolbarY }}
-              className="w-full px-4 md:px-8 py-3 bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-2xl flex items-center justify-between transition-colors"
+            <div
+              style={{
+                opacity: toolbarProgress,
+                transform: `translate3d(0, ${toolbarY}px, 0)`,
+                pointerEvents: showToolbar ? 'auto' : 'none',
+                visibility: showToolbar ? 'visible' : 'hidden'
+              }}
+              className="w-full px-4 md:px-8 py-3 bg-slate-950/90 backdrop-blur-xl border-b border-white/10 shadow-2xl flex items-center justify-between transition-[opacity,transform] duration-150 ease-out"
             >
               {/* Identidad y Título de la Solución que emerge al scrollear */}
-              <div className="flex items-center gap-3 pointer-events-auto">
+              <div className="flex items-center gap-3">
                 <MicroLogo
                   variant="badge"
                   accentColor={card.accentColor}
@@ -108,7 +121,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
 
               {/* Espacio reservado a la derecha alineado con el botón Salir */}
               <div className="w-24 shrink-0 pointer-events-none" />
-            </motion.div>
+            </div>
           </div>
 
           {/* Botón flotante para salir con sombra Aurora Boreal */}
@@ -125,9 +138,13 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
 
           {/* Hero Section con Parallax (Video / Imagen / GIF) */}
           <div className="relative w-full h-[58vh] min-h-[380px] max-h-[640px] overflow-hidden bg-slate-950">
-            <motion.div 
-              style={{ y: mediaY, scale: mediaScale, opacity: heroOpacity }}
-              className="absolute inset-0 w-full h-full will-change-transform"
+            <div 
+              style={{
+                transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
+                opacity: heroOpacity,
+                willChange: 'transform, opacity'
+              }}
+              className="absolute inset-0 w-full h-full"
             >
               {isVideo && videoSource ? (
                 <div className="relative w-full h-full">
@@ -170,7 +187,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   className="w-full h-full object-cover"
                 />
               )}
-            </motion.div>
+            </div>
 
             {/* Gradient Overlays para legibilidad y elegancia */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent pointer-events-none" />
