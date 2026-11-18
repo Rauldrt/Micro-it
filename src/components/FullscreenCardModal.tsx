@@ -40,7 +40,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const heroOpacity = Math.max(0.15, 1 - scrollOffset / 900);
 
   // Cálculo reactivo para la Collapsing Toolbar (se revela a medida que el título del pie del video llega al tope)
-  const toolbarProgress = Math.min(Math.max((scrollOffset - 280) / 160, 0), 1);
+  const toolbarProgress = Math.min(Math.max((scrollOffset - 360) / 160, 0), 1);
   const toolbarY = (1 - toolbarProgress) * -20;
   const showToolbar = toolbarProgress > 0.02;
 
@@ -193,15 +193,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           </div>
 
           {/* 4. ESCENARIO PARALLAX 2:1 (El video tiene protagonismo total, sin cortes y con movimiento a medio paso) */}
-          <div className="absolute inset-x-0 top-0 h-[80vh] min-h-[520px] max-h-[860px] overflow-hidden pointer-events-none z-10">
+          <div className="absolute inset-x-0 top-0 h-[86vh] min-h-[580px] max-h-[920px] overflow-hidden pointer-events-none z-10">
             <div 
               style={{
                 transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
                 transformOrigin: 'center top',
                 willChange: 'transform, opacity',
                 opacity: heroOpacity,
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 72%, transparent 100%)',
-                maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 72%, transparent 100%)'
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 8%, black 78%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, black 8%, black 78%, transparent 100%)'
               }}
               className="relative w-full h-full flex items-center justify-center"
             >
@@ -230,15 +230,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </div>
           </div>
 
-          {/* 5. CAPA DE ELEMENTOS EN SCROLL (Ubicados al pie del video para darle protagonismo absoluto) */}
+          {/* 5. CAPA DE ELEMENTOS EN SCROLL (Ubicados al pie del video para que las tarjetas apenas asomen en el borde inferior) */}
           <div className="relative z-20 w-full min-h-screen">
-            {/* Hero Text & Badges: Inician al pie del video (a ~56vh / 62vh) dejando el reproductor completamente limpio */}
+            {/* Hero Text & Badges: Inician a ~70vh / 74vh, dejando ver el video completo y asomando apenas las tarjetas de specs */}
             <div 
               style={{
-                opacity: Math.max(0, 1 - scrollOffset / 420),
-                transform: `translate3d(0, ${scrollOffset * -0.12}px, 0)`
+                opacity: Math.max(0, 1 - scrollOffset / 480),
+                transform: `translate3d(0, ${scrollOffset * -0.1}px, 0)`
               }}
-              className="pt-[54vh] md:pt-[60vh] pb-8 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
+              className="pt-[70vh] md:pt-[74vh] pb-8 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
             >
               {/* Badges y Control de Sonido ubicados juntos al pie del video */}
               <div className="flex flex-wrap items-center gap-2.5 pointer-events-auto">
