@@ -20,7 +20,6 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const videoLayerRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
-  const rafIdRef = useRef<number | null>(null);
 
   const [isMuted, setIsMuted] = useState(true);
 
@@ -31,41 +30,40 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     }
   };
 
-  // Scroll de ultra-alto rendimiento con RAF: cero re-renders en React, compositing 100% en GPU
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollTop = e.currentTarget.scrollTop;
+  // Actualización inmediata y síncrona en cada tick de scroll: Cero latencia y cero saltos por pasos al arrastrar la barra
+  const updateVisuals = (scrollTop: number) => {
+    // 1. Parallax cinematográfico 3:1 (exactamente a 1/3 de velocidad en tiempo real)
+    if (videoLayerRef.current) {
+      const mediaY = scrollTop * (2 / 3);
+      const heroOpacity = Math.max(0.12, 1 - scrollTop / 1100);
+      videoLayerRef.current.style.transform = `translate3d(0, ${mediaY}px, 0)`;
+      videoLayerRef.current.style.opacity = `${heroOpacity}`;
+    }
 
-    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-    rafIdRef.current = requestAnimationFrame(() => {
-      // 1. Parallax cinematográfico 3:1 (el video avanza a 1/3 de la velocidad de los elementos)
-      if (videoLayerRef.current) {
-        const mediaY = scrollTop * (2 / 3);
-        const heroOpacity = Math.max(0.12, 1 - scrollTop / 1100);
-        videoLayerRef.current.style.transform = `translate3d(0, ${mediaY}px, 0)`;
-        videoLayerRef.current.style.opacity = `${heroOpacity}`;
-      }
+    // 2. Collapsing Toolbar: emerge suavemente cuando el título del pie de video se oculta
+    if (toolbarRef.current) {
+      const progress = Math.min(Math.max((scrollTop - 360) / 160, 0), 1);
+      const y = (1 - progress) * -20;
+      toolbarRef.current.style.opacity = `${progress}`;
+      toolbarRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
+      toolbarRef.current.style.pointerEvents = progress > 0.02 ? 'auto' : 'none';
+      toolbarRef.current.style.visibility = progress > 0.02 ? 'visible' : 'hidden';
+    }
 
-      // 2. Collapsing Toolbar: emerge suavemente cuando el título del pie de video se oculta
-      if (toolbarRef.current) {
-        const progress = Math.min(Math.max((scrollTop - 360) / 160, 0), 1);
-        const y = (1 - progress) * -20;
-        toolbarRef.current.style.opacity = `${progress}`;
-        toolbarRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
-        toolbarRef.current.style.pointerEvents = progress > 0.02 ? 'auto' : 'none';
-        toolbarRef.current.style.visibility = progress > 0.02 ? 'visible' : 'hidden';
-      }
-
-      // 3. Hero Text al pie del video: se atenúa suavemente conforme entra en la zona superior
-      if (heroTextRef.current) {
-        const opacity = Math.max(0, 1 - scrollTop / 480);
-        const y = scrollTop * -0.1;
-        heroTextRef.current.style.opacity = `${opacity}`;
-        heroTextRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
-    });
+    // 3. Hero Text al pie del video: se atenúa suavemente conforme entra en la zona superior
+    if (heroTextRef.current) {
+      const opacity = Math.max(0, 1 - scrollTop / 480);
+      const y = scrollTop * -0.1;
+      heroTextRef.current.style.opacity = `${opacity}`;
+      heroTextRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
+    }
   };
 
-  // Limpieza de eventos y cancelación de RAF al desmontar
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    updateVisuals(e.currentTarget.scrollTop);
+  };
+
+  // Limpieza de eventos al desmontar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -77,7 +75,6 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
   }, [card, onClose]);
 
@@ -112,7 +109,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             ease: [0.16, 1, 0.3, 1]
           }}
           onMouseMove={handleMouseMove}
-          className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto overflow-x-hidden select-none will-change-scroll"
+          className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto overflow-x-hidden select-none modal-smooth-scrollbar will-change-scroll"
           onScroll={handleScroll}
         >
           {/* 1. FONDO TÉCNICO CONTINUO DE MICRO-IT (Fixed & GPU Nativo sin filtros blur pesados) */}
