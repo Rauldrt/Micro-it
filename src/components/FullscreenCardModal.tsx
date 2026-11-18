@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
@@ -19,14 +19,13 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const [isMuted, setIsMuted] = useState(true);
   const [scrollOffset, setScrollOffset] = useState(0);
 
-  // Coordenadas del cursor relativas al cuerpo del contenido para el halo interactivo
+  // Coordenadas del cursor en pantalla para el spotlight interactivo
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 500, y: 300 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
     setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: e.clientX,
+      y: e.clientY
     });
   };
 
@@ -35,13 +34,13 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     setScrollOffset(e.currentTarget.scrollTop);
   };
 
-  // Parallax suave: parte de translateY = 0 en el tope de la pantalla para nunca recortar la cabecera del video
-  const mediaY = scrollOffset * 0.28;
-  const mediaScale = 1 + Math.min(scrollOffset / 3000, 0.05);
-  const heroOpacity = Math.max(0.15, 1 - scrollOffset / 500);
+  // Parallax cinematográfico a paso 2:1 (por cada 2 pasos de scroll, el video se mueve 1)
+  const mediaY = scrollOffset * 0.5;
+  const mediaScale = 1 + Math.min(scrollOffset / 4000, 0.04);
+  const heroOpacity = Math.max(0.12, 1 - scrollOffset / 800);
 
-  // Cálculo reactivo para la Collapsing Toolbar (se revela entre 180px y 300px de scroll)
-  const toolbarProgress = Math.min(Math.max((scrollOffset - 180) / 120, 0), 1);
+  // Cálculo reactivo para la Collapsing Toolbar (se revela entre 150px y 280px de scroll)
+  const toolbarProgress = Math.min(Math.max((scrollOffset - 150) / 130, 0), 1);
   const toolbarY = (1 - toolbarProgress) * -20;
   const showToolbar = toolbarProgress > 0.02;
 
@@ -70,7 +69,6 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
         <motion.div
           key={card.id}
           ref={containerRef}
-          // Simultaneous top & bottom vertical stretch animation without altering width
           initial={{ 
             clipPath: 'inset(36% 0% 36% 0%)',
             scaleY: 0.5,
@@ -89,12 +87,45 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           style={{ originY: 0.5 }}
           transition={{
             duration: 0.6,
-            ease: [0.16, 1, 0.3, 1] // Smooth deceleration curve at the end
+            ease: [0.16, 1, 0.3, 1]
           }}
-          className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto overflow-x-hidden"
+          onMouseMove={handleMouseMove}
+          className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto overflow-x-hidden select-none"
           onScroll={handleScroll}
         >
-          {/* Collapsing Toolbar flotante: Se revela con blur al ocultarse el Hero en scroll */}
+          {/* 1. FONDO TÉCNICO CONTINUO DE MICRO-IT (Fixed: Cero Cortes o Líneas en Todo el Scroll) */}
+          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            {/* Cuadrícula Blueprint sutil que abarca toda la pantalla sin cortes */}
+            <div 
+              className="absolute inset-0 opacity-[0.035]"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, #ffffff 1px, transparent 1px),
+                  linear-gradient(to bottom, #ffffff 1px, transparent 1px)
+                `,
+                backgroundSize: '48px 48px'
+              }}
+            />
+
+            {/* Spotlight Linterna Reactivo al Cursor (Sigue el puntero en todo el documento) */}
+            <div 
+              className="absolute inset-0 transition-opacity duration-300 opacity-60 pointer-events-none"
+              style={{
+                background: `radial-gradient(750px circle at ${mousePos.x}px ${mousePos.y}px, ${card.accentColor}25 0%, transparent 70%)`
+              }}
+            />
+
+            {/* Resplandor Ambiental Polar Reactivo al Color de la Solución */}
+            <div 
+              className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] h-[520px] blur-[160px] opacity-20 rounded-full pointer-events-none"
+              style={{ backgroundColor: card.accentColor }}
+            />
+            <div 
+              className="absolute bottom-10 right-10 w-[520px] h-[400px] blur-[180px] opacity-15 rounded-full bg-sky-500 pointer-events-none"
+            />
+          </div>
+
+          {/* 2. COLLAPSING TOOLBAR FLOTANTE (Se revela suavemente al ocultarse el Hero) */}
           <div className="sticky top-0 z-40 w-full pointer-events-none h-0 overflow-visible">
             <div
               style={{
@@ -135,8 +166,31 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </div>
           </div>
 
-          {/* Botón flotante para salir con sombra Aurora Boreal */}
-          <div className="sticky top-3.5 z-50 flex justify-end px-4 md:px-8 pointer-events-none h-0">
+          {/* 3. BOTONES FLOTANTES SUPERIORES (Audio & Salir) */}
+          <div className="sticky top-3.5 z-50 flex items-center justify-between px-4 md:px-8 pointer-events-none h-0">
+            {/* Control Audio */}
+            {isVideo ? (
+              <button
+                type="button"
+                onClick={() => setIsMuted(!isMuted)}
+                className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/85 hover:bg-black text-white text-xs font-semibold border border-white/20 backdrop-blur-md flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xl"
+                title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+              >
+                {isMuted ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                    <span className="hidden sm:inline">Activar Sonido</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="hidden sm:inline">Sonido Activo</span>
+                  </>
+                )}
+              </button>
+            ) : <div />}
+
+            {/* Salir */}
             <button
               onClick={onClose}
               className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
@@ -147,69 +201,54 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </button>
           </div>
 
-          {/* Hero Section con Parallax (Video / Imagen / GIF) */}
-          <div className="relative w-full h-[65vh] min-h-[460px] max-h-[760px] overflow-hidden bg-slate-950 shrink-0">
-            {/* Sutil viñeta en el tope para integrar el video con el fondo oscuro y dar margen estético */}
-            <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-slate-950 via-slate-950/40 to-transparent pointer-events-none z-20" />
-
+          {/* 4. ESCENARIO PARALLAX 2:1 (El video se mueve a 1 paso por cada 2 pasos de scroll, con bordes difuminados sin cortes) */}
+          <div className="absolute inset-x-0 top-0 h-[82vh] min-h-[540px] max-h-[880px] overflow-hidden pointer-events-none z-10">
             <div 
               style={{
                 transform: `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`,
                 transformOrigin: 'center top',
+                willChange: 'transform, opacity',
                 opacity: heroOpacity,
-                willChange: 'transform, opacity'
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 72%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 72%, transparent 100%)'
               }}
-              className="absolute inset-x-0 top-3 md:top-5 bottom-[-15%] w-full h-[115%]"
+              className="relative w-full h-full flex items-center justify-center"
             >
               {isVideo && videoSource ? (
-                <div className="relative w-full h-full">
-                  <video
-                    src={videoSource}
-                    poster={card.imageUrl}
-                    autoPlay
-                    loop
-                    muted={isMuted}
-                    playsInline
-                    className="w-full h-full object-cover object-top pointer-events-none"
-                  />
-                  {/* Control Mute/Unmute para videos con audio */}
-                  <div className="absolute top-6 left-6 z-30">
-                    <button
-                      type="button"
-                      onClick={() => setIsMuted(!isMuted)}
-                      className="p-2.5 rounded-full bg-slate-950/80 hover:bg-black text-white border border-white/20 backdrop-blur-md transition-all active:scale-90 cursor-pointer flex items-center gap-2 text-xs font-medium shadow-2xl"
-                      title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
-                    >
-                      {isMuted ? (
-                        <>
-                          <VolumeX className="w-4 h-4 text-rose-400" />
-                          <span className="hidden sm:inline">Activar Sonido</span>
-                        </>
-                      ) : (
-                        <>
-                          <Volume2 className="w-4 h-4 text-emerald-400" />
-                          <span className="hidden sm:inline">Sonido Activo</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+                <video
+                  src={videoSource}
+                  poster={card.imageUrl}
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  className="w-full h-full object-cover object-top pointer-events-none opacity-90"
+                />
               ) : (
                 <LazyImage
                   src={card.imageUrl}
                   alt={card.title}
                   accentColor={card.accentColor}
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-top opacity-90"
                 />
               )}
+
+              {/* Viñeta lateral suave para que tampoco se corte en pantallas ultra-anchas */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80 pointer-events-none" />
+              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-25 mix-blend-multiply pointer-events-none`} />
             </div>
+          </div>
 
-            {/* Gradient Overlays elegantes (resaltan el texto inferior sin oscurecer ni recortar el tope del video) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
-            <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-30 mix-blend-multiply pointer-events-none`} />
-
-            {/* Hero Text Content */}
-            <div className="absolute bottom-0 inset-x-0 p-6 md:p-12 max-w-5xl mx-auto flex flex-col items-start gap-3 pointer-events-none">
+          {/* 5. CAPA DE ELEMENTOS EN SCROLL (Avanza a velocidad normal 1.0x por encima del video) */}
+          <div className="relative z-20 w-full min-h-screen">
+            {/* Hero Text Content flotante sobre el video */}
+            <div 
+              style={{
+                opacity: Math.max(0, 1 - scrollOffset / 320),
+                transform: `translate3d(0, ${scrollOffset * -0.15}px, 0)`
+              }}
+              className="pt-[22vh] md:pt-[28vh] pb-12 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
+            >
               <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full border backdrop-blur-md ${card.badgeBg}`}>
                   {card.category}
@@ -232,62 +271,24 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 >
                   {card.number}
                 </span>
-                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-md">
+                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-xl">
                   {card.title}
                 </h1>
               </div>
 
-              <p className="text-lg md:text-xl text-slate-300 font-light max-w-2xl">
+              <p className="text-lg md:text-xl text-slate-200 font-light max-w-2xl drop-shadow">
                 {card.subtitle}
               </p>
             </div>
-          </div>
 
-          {/* Content Body con Fondo Técnico de Micro-it (Cuadrícula Blueprint & Resplandores Especulares Reactivos al Cursor) */}
-          <div 
-            onMouseMove={handleMouseMove}
-            className="relative w-full bg-slate-950 min-h-screen"
-          >
-            {/* Capa de Fondo Técnico Aislada (overflow-hidden y pointer-events-none para que los blurs no desborden ni intercepten el scroll) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              {/* 1. Malla Geométrica Tecnológica (Blueprint Grid sutil) */}
-              <div 
-                className="absolute inset-0 opacity-[0.04]"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(to right, #ffffff 1px, transparent 1px),
-                    linear-gradient(to bottom, #ffffff 1px, transparent 1px)
-                  `,
-                  backgroundSize: '48px 48px'
-                }}
-              />
-
-              {/* 2. Spotlight Reactivo al Movimiento del Mouse (Efecto Linterna de Alta Tecnología) */}
-              <div 
-                className="absolute inset-0 transition-opacity duration-300 opacity-60"
-                style={{
-                  background: `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, ${card.accentColor}25 0%, transparent 70%)`
-                }}
-              />
-
-              {/* 3. Resplandor Ambiental Polar Reactivo al Color de la Solución (Base de Profundidad) */}
-              <div 
-                className="absolute top-10 left-1/2 -translate-x-1/2 w-[720px] h-[450px] blur-[150px] opacity-25 rounded-full"
-                style={{ backgroundColor: card.accentColor }}
-              />
-              <div 
-                className="absolute bottom-20 right-10 w-[460px] h-[360px] blur-[170px] opacity-15 rounded-full bg-sky-500"
-              />
-            </div>
-
-            {/* Contenedor Central con ancho contenido */}
-            <div className="relative z-10 max-w-5xl w-full mx-auto px-6 py-8 md:py-14 space-y-12 select-text">
-              {/* Spec Cards Grid con Acentos Vivos & Glassmorphism Reforzado */}
+            {/* Contenedor Central con ancho contenido (Tarjetas de especificaciones, Descripción detallada y Acciones) */}
+            <div className="max-w-5xl w-full mx-auto px-6 pb-24 space-y-12 select-text">
+              {/* Spec Cards Grid con Acentos Vivos & Glassmorphism Reforzado (Desliza suavemente sobre el video) */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {card.specs.map((spec, idx) => (
                   <div
                     key={idx}
-                    className="group relative p-4 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/80 border border-white/10 hover:border-white/25 backdrop-blur-md flex flex-col gap-1.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl overflow-hidden"
+                    className="group relative p-4 rounded-2xl bg-gradient-to-b from-slate-900/85 to-slate-950/80 border border-white/10 hover:border-white/25 backdrop-blur-md flex flex-col gap-1.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl overflow-hidden"
                   >
                     {/* Borde superior tenue con el acento de la card */}
                     <div 
@@ -309,7 +310,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
               </div>
 
               {/* Detailed Overview con Renderizador Interactivo & Tablas Glassmorphism */}
-              <div className="relative p-6 md:p-10 rounded-3xl bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 border border-white/15 backdrop-blur-xl space-y-6 shadow-2xl overflow-hidden">
+              <div className="relative p-6 md:p-10 rounded-3xl bg-gradient-to-b from-slate-900/85 via-slate-900/65 to-slate-950/90 border border-white/15 backdrop-blur-xl space-y-6 shadow-2xl overflow-hidden">
                 {/* Destello sutil en esquina superior izquierda */}
                 <div 
                   className="absolute -top-16 -left-16 w-32 h-32 rounded-full blur-2xl opacity-20 pointer-events-none"
