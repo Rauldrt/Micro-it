@@ -40,9 +40,8 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
       // 1. Parallax cinematográfico 3:1 (el video avanza a 1/3 de la velocidad de los elementos)
       if (videoLayerRef.current) {
         const mediaY = scrollTop * (2 / 3);
-        const mediaScale = 1 + Math.min(scrollTop / 5000, 0.04);
         const heroOpacity = Math.max(0.12, 1 - scrollTop / 1100);
-        videoLayerRef.current.style.transform = `translate3d(0, ${mediaY}px, 0) scale(${mediaScale})`;
+        videoLayerRef.current.style.transform = `translate3d(0, ${mediaY}px, 0)`;
         videoLayerRef.current.style.opacity = `${heroOpacity}`;
       }
 
@@ -222,17 +221,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </button>
           </div>
 
-          {/* 4. ESCENARIO PARALLAX 3:1 (Aceleración por GPU dedicada vía translate3d y sin re-renders) */}
+          {/* 4. ESCENARIO PARALLAX 3:1 (Hardware Overlay Puro: aceleración de video nativa sin mask-image ni mix-blend) */}
           <div className="absolute inset-x-0 top-0 h-[88vh] min-h-[600px] max-h-[940px] overflow-hidden pointer-events-none z-10">
             <div 
               ref={videoLayerRef}
               style={{
-                transform: 'translate3d(0, 0px, 0) scale(1)',
+                transform: 'translate3d(0, 0px, 0)',
                 transformOrigin: 'center top',
                 willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 8%, black 78%, transparent 100%)',
-                maskImage: 'linear-gradient(to bottom, transparent 0%, black 8%, black 78%, transparent 100%)'
+                backfaceVisibility: 'hidden'
               }}
               className="relative w-full h-full flex items-center justify-center"
             >
@@ -244,20 +241,26 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   loop
                   muted={isMuted}
                   playsInline
-                  className="w-full h-full object-cover object-top pointer-events-none opacity-95 will-change-transform"
+                  preload="auto"
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  className="w-full h-full object-cover object-top pointer-events-none opacity-100"
                 />
               ) : (
                 <LazyImage
                   src={card.imageUrl}
                   alt={card.title}
                   accentColor={card.accentColor}
-                  className="w-full h-full object-cover object-top opacity-95 will-change-transform"
+                  className="w-full h-full object-cover object-top opacity-100"
                 />
               )}
 
-              {/* Viñeta lateral suave */}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80 pointer-events-none" />
-              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-20 mix-blend-multiply pointer-events-none`} />
+              {/* Viñetas y difuminados de borde en capa superior (Cero costo de GPU, sin romper la aceleración del video) */}
+              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-950/80 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-950/80 to-transparent pointer-events-none z-10" />
+              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-15 pointer-events-none z-10`} />
             </div>
           </div>
 
