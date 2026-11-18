@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
+import { MicroLogo } from './MicroLogo';
 
 interface FullscreenCardModalProps {
   card: CardItem | null;
@@ -21,6 +22,10 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const mediaY = useTransform(scrollY, [0, 500], [0, 140]);
   const mediaScale = useTransform(scrollY, [-200, 0, 500], [1.15, 1, 1.05]);
   const heroOpacity = useTransform(scrollY, [0, 380], [1, 0.4]);
+
+  // Collapsing Toolbar animations al ocultarse el encabezado (entre 220px y 360px de scroll)
+  const toolbarOpacity = useTransform(scrollY, [200, 320], [0, 1]);
+  const toolbarY = useTransform(scrollY, [200, 320], [-25, 0]);
 
   // Listen for Escape key to close
   useEffect(() => {
@@ -70,15 +75,51 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           }}
           className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto scrollbar-none"
         >
+          {/* Collapsing Toolbar flotante: Se revela con blur al ocultarse el Hero en scroll */}
+          <div className="sticky top-0 z-40 w-full pointer-events-none h-0 overflow-visible">
+            <motion.div
+              style={{ opacity: toolbarOpacity, y: toolbarY }}
+              className="w-full px-4 md:px-8 py-3 bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-2xl flex items-center justify-between transition-colors"
+            >
+              {/* Identidad y Título de la Solución que emerge al scrollear */}
+              <div className="flex items-center gap-3 pointer-events-auto">
+                <MicroLogo
+                  variant="badge"
+                  accentColor={card.accentColor}
+                  size="sm"
+                />
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className="text-xs font-mono font-black"
+                      style={{ color: card.accentColor }}
+                    >
+                      {card.number}
+                    </span>
+                    <h2 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
+                      {card.title}
+                    </h2>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
+                    {card.subtitle}
+                  </span>
+                </div>
+              </div>
+
+              {/* Espacio reservado a la derecha alineado con el botón Salir */}
+              <div className="w-24 shrink-0 pointer-events-none" />
+            </motion.div>
+          </div>
+
           {/* Botón flotante para salir con sombra Aurora Boreal */}
-          <div className="sticky top-5 z-40 flex justify-end px-6 pointer-events-none h-0">
+          <div className="sticky top-3.5 z-50 flex justify-end px-4 md:px-8 pointer-events-none h-0">
             <button
               onClick={onClose}
-              className="pointer-events-auto h-10 px-4 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol"
+              className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
               title="Salir (Esc)"
             >
               <span>Salir</span>
-              <X className="w-4 h-4 text-sky-300" />
+              <X className="w-3.5 h-3.5 text-sky-300" />
             </button>
           </div>
 
