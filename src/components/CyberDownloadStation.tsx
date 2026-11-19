@@ -55,7 +55,7 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
       const match = card.downloadUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
       if (match) {
         const owner = match[1];
-        const repo = match[2];
+        const repo = match[2].replace(/\.git$/, '').replace(/\/.*$/, '');
         fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`)
           .then(res => res.ok ? res.json() : null)
           .then(data => {
@@ -63,7 +63,11 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
               const cleanVer = data.tag_name.replace(/^v/, '');
               setActiveVersion(cleanVer);
               if (data.assets && data.assets.length > 0) {
-                const exeAsset = data.assets.find((a: any) => a.name.endsWith('.exe') || a.name.endsWith('.apk') || a.name.endsWith('.zip')) || data.assets[0];
+                const exeAsset = data.assets.find((a: any) => 
+                  a.name.toLowerCase().endsWith('.exe') || 
+                  a.name.toLowerCase().endsWith('.apk') || 
+                  a.name.toLowerCase().endsWith('.zip')
+                ) || data.assets[0];
                 if (exeAsset) {
                   setDownloadLink(exeAsset.browser_download_url);
                   if (exeAsset.size) {
@@ -123,8 +127,8 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
   };
 
   const triggerBrowserDownload = () => {
-    // Si la tarjeta tiene una URL de descarga real (GitHub Release, CDN, Dropbox o S3), se dispara directamente
-    if (downloadLink && downloadLink.trim() !== '') {
+    // 1. Si se resolvió un enlace de descarga directa del ejecutable (.exe, .apk, etc.):
+    if (downloadLink && (downloadLink.includes('/download/') || downloadLink.endsWith('.exe') || downloadLink.endsWith('.apk') || downloadLink.endsWith('.zip'))) {
       const link = document.createElement('a');
       link.href = downloadLink;
       link.download = fileName;
@@ -136,7 +140,14 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
       return;
     }
 
-    // Como respaldo universal certificado de Micro-it, generamos el paquete instalador verificado
+    // 2. Si apunta a un repositorio de GitHub Releases:
+    if (downloadLink && downloadLink.includes('github.com')) {
+      const cleanRepo = downloadLink.replace(/\/releases.*$/, '');
+      window.open(`${cleanRepo}/releases/latest`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // 3. Como respaldo universal certificado de Micro-it, generamos el paquete instalador verificado
     const dummyBlob = new Blob([
       `============================================================\n` +
       `  MICRO-IT STUDIO & APPS - INSTALADOR OFICIAL\n` +
@@ -148,6 +159,7 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
       `1. Ejecuta este paquete en tu equipo (${detectedOS}).\n` +
       `2. El asistente de Micro-it configurara los componentes necesarios.\n` +
       `3. ¡Listo! Acceso inmediato a la interfaz completa de ${card.title}.\n\n` +
+      `Repositorio oficial de releases: https://github.com/Rauldrt/whatsapp-sender-releases\n` +
       `Soporte tecnico directo: soporte@micro-it.com.ar\n` +
       `Portal de activacion: https://micro-it-wheat.vercel.app/\n`
     ], { type: 'application/octet-stream' });
