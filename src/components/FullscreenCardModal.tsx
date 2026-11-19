@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, Volume2, VolumeX } from 'lucide-react';
+import { X, MapPin, Sparkles, Share2, Bookmark, ExternalLink, Volume2, VolumeX, Download, ArrowDown } from 'lucide-react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
 import { MicroLogo } from './MicroLogo';
 import { FormattedDescription } from './FormattedDescription';
+import { CyberDownloadStation } from './CyberDownloadStation';
 
 interface FullscreenCardModalProps {
   card: CardItem | null;
@@ -25,10 +26,17 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const heroTextRef = useRef<HTMLDivElement>(null);   // Capa 2: Superior (Texto Hero)
   const toolbarRef = useRef<HTMLDivElement>(null);    // Toolbar superior fija
   const audioBtnTopRef = useRef<HTMLDivElement>(null);// Botón de audio superior inicial
+  const downloadSectionRef = useRef<HTMLDivElement>(null); // Sección de descarga interactiva
 
   const [isMuted, setIsMuted] = useState(true);
   const mouseRafRef = useRef<number | null>(null);
   const scrollRafRef = useRef<number | null>(null);
+
+  const scrollToDownload = () => {
+    if (downloadSectionRef.current) {
+      downloadSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   // MouseMove de ultra-alto rendimiento: actualiza el spotlight directamente en la capa intermedia
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -251,8 +259,23 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
               </div>
             </div>
 
-            {/* Margen derecho reservado alineado con el botón Salir */}
-            <div className="w-24 shrink-0 pointer-events-none" />
+            {/* Acciones de cabecera: Descarga Rápida y Salir */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={scrollToDownload}
+                className="pointer-events-auto px-3.5 py-1.5 rounded-full text-xs font-black text-slate-950 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                style={{ backgroundColor: card.accentColor }}
+                title="Descargar Instalador Oficial"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Descargar App</span>
+                <span className="sm:hidden">Descargar</span>
+              </button>
+
+              {/* Margen derecho reservado alineado con el botón Salir */}
+              <div className="w-20 shrink-0 pointer-events-none" />
+            </div>
           </div>
 
           {/* =====================================================================
@@ -467,22 +490,28 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 </div>
               </div>
 
+              {/* Estación de Descarga Holográfica Interactiva */}
+              <div ref={downloadSectionRef}>
+                <CyberDownloadStation card={card} />
+              </div>
+
               {/* Action Bar */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/10 pb-16">
                 <div className="flex items-center gap-3">
                   <button 
+                    onClick={scrollToDownload}
                     className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-slate-950 transition-all hover:brightness-110 active:scale-95 shadow-xl cursor-pointer"
                     style={{ backgroundColor: card.accentColor }}
                   >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Explorar Experiencia</span>
+                    <Download className="w-4 h-4 animate-bounce" />
+                    <span>Descargar Instalador</span>
                   </button>
 
-                  <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer">
+                  <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer" title="Guardar">
                     <Bookmark className="w-4 h-4" />
                   </button>
 
-                  <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer">
+                  <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer" title="Compartir">
                     <Share2 className="w-4 h-4" />
                   </button>
                 </div>
