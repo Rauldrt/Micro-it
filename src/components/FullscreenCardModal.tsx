@@ -24,6 +24,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const spotlightRef = useRef<HTMLDivElement>(null);  // Spotlight reactivo al cursor
   const heroTextRef = useRef<HTMLDivElement>(null);   // Capa 2: Superior (Texto Hero)
   const toolbarRef = useRef<HTMLDivElement>(null);    // Toolbar superior fija
+  const audioBtnTopRef = useRef<HTMLDivElement>(null);// Botón de audio superior inicial
 
   const [isMuted, setIsMuted] = useState(true);
   const mouseRafRef = useRef<number | null>(null);
@@ -49,40 +50,50 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
    * - Capa 2 (Superior - Cards y Textos): Velocidad 1.00 (Flujo de scroll normal)
    * - Capa 1 (Intermedia - Cuadrícula Blueprint): Velocidad 0.75 (Diferencia de 1/4 con la superior)
    * - Capa 0 (Fondo - Video): Velocidad 0.50 (Diferencia de 1/4 con la intermedia)
+   * Todo acelerado por GPU puro con translate3d (cero repaints de backgroundPosition)
    */
   const updateVisuals = (scrollTop: number) => {
     // 1. CAPA 0 (FONDO - VIDEO): Avanza a velocidad 0.50x
     if (videoLayerRef.current) {
-      const mediaY = scrollTop * 0.50;
-      const heroOpacity = Math.max(0.12, 1 - scrollTop / 1100);
+      const mediaY = -scrollTop * 0.50;
+      const heroOpacity = Math.max(0, 1 - scrollTop / 950);
       videoLayerRef.current.style.transform = `translate3d(0, ${mediaY}px, 0)`;
       videoLayerRef.current.style.opacity = `${heroOpacity}`;
     }
 
-    // 2. CAPA 1 (INTERMEDIA - CUADRÍCULA & LUCES): Avanza a velocidad 0.75x
+    // 2. CAPA 1 (INTERMEDIA - CUADRÍCULA & LUCES): Avanza a velocidad 0.75x con GPU transform puro
     if (gridLayerRef.current) {
-      gridLayerRef.current.style.backgroundPositionY = `${-scrollTop * 0.75}px`;
+      const gridY = -scrollTop * 0.75;
+      gridLayerRef.current.style.transform = `translate3d(0, ${gridY % 48}px, 0)`;
     }
     if (midLightsRef.current) {
       midLightsRef.current.style.transform = `translate3d(0, ${-scrollTop * 0.25}px, 0)`;
     }
 
-    // 3. CAPA 2 (SUPERIOR - CARDS Y TEXTOS): Avanza a velocidad 1.00x
+    // 3. CAPA 2 (SUPERIOR - HERO TEXT): Desvanece sutilmente al comenzar el recorrido
     if (heroTextRef.current) {
-      const opacity = Math.max(0, 1 - scrollTop / 480);
-      const y = scrollTop * -0.1;
+      const opacity = Math.max(0, 1 - scrollTop / 420);
+      const y = scrollTop * -0.15;
       heroTextRef.current.style.opacity = `${opacity}`;
       heroTextRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
     }
 
-    // Collapsing Toolbar superior
+    // 4. Collapsing Toolbar superior anclada en top-0
     if (toolbarRef.current) {
-      const progress = Math.min(Math.max((scrollTop - 360) / 160, 0), 1);
+      const progress = Math.min(Math.max((scrollTop - 320) / 140, 0), 1);
       const y = (1 - progress) * -20;
       toolbarRef.current.style.opacity = `${progress}`;
       toolbarRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      toolbarRef.current.style.pointerEvents = progress > 0.02 ? 'auto' : 'none';
-      toolbarRef.current.style.visibility = progress > 0.02 ? 'visible' : 'hidden';
+      toolbarRef.current.style.pointerEvents = progress > 0.05 ? 'auto' : 'none';
+      toolbarRef.current.style.visibility = progress > 0.05 ? 'visible' : 'hidden';
+    }
+
+    // 5. Botón de Audio Superior Inicial (se desvanece al emerger la toolbar)
+    if (audioBtnTopRef.current) {
+      const audioOpacity = Math.max(0, 1 - scrollTop / 260);
+      audioBtnTopRef.current.style.opacity = `${audioOpacity}`;
+      audioBtnTopRef.current.style.pointerEvents = audioOpacity > 0.1 ? 'auto' : 'none';
+      audioBtnTopRef.current.style.visibility = audioOpacity > 0.1 ? 'visible' : 'hidden';
     }
   };
 
@@ -147,9 +158,108 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           onScroll={handleScroll}
         >
           {/* =====================================================================
-              CAPA 0 (FONDO): EL VIDEO / MEDIA STAGE (z-index: 0, Velocidad: 0.50x)
+              BARRA SUPERIOR FIJA: BOTÓN SALIR, CONTROL DE AUDIO & TOOLBAR COLAPSIBLE
+              (Ancladas fijas al viewport superior, sin depender del flujo del documento)
               ===================================================================== */}
-          <div className="absolute inset-x-0 top-0 h-[88vh] min-h-[600px] max-h-[940px] overflow-hidden pointer-events-none z-0">
+          
+          {/* 1. Botón Flotante Salir (Esc): Anclado permanentemente en la esquina superior derecha */}
+          <div className="fixed top-3.5 right-4 md:right-8 z-50 pointer-events-auto">
+            <button
+              onClick={onClose}
+              className="h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
+              title="Salir (Esc)"
+            >
+              <span>Salir</span>
+              <X className="w-3.5 h-3.5 text-sky-300" />
+            </button>
+          </div>
+
+          {/* 2. Botón de Audio Superior Inicial: visible en la cabecera cuando el video está en primer plano */}
+          {isVideo && (
+            <div 
+              ref={audioBtnTopRef}
+              className="fixed top-3.5 left-4 md:left-8 z-30 transition-opacity duration-300 pointer-events-auto"
+            >
+              <button
+                type="button"
+                onClick={() => setIsMuted(!isMuted)}
+                className="h-9 px-3.5 rounded-full bg-black/80 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl backdrop-blur-sm"
+                title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+              >
+                {isMuted ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Activar Sonido</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-300">Sonido Activo</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* 3. Collapsing Toolbar: Se desliza y desvanece al scrollear hacia el contenido */}
+          <div
+            ref={toolbarRef}
+            style={{
+              opacity: 0,
+              transform: 'translate3d(0, -20px, 0)',
+              pointerEvents: 'none',
+              visibility: 'hidden'
+            }}
+            className="fixed top-0 inset-x-0 z-40 px-4 md:px-8 py-3 bg-slate-950/95 backdrop-blur-md border-b border-white/10 shadow-2xl flex items-center justify-between"
+          >
+            {/* Identidad y Título de la Solución */}
+            <div className="flex items-center gap-3">
+              <MicroLogo
+                variant="badge"
+                accentColor={card.accentColor}
+                size="sm"
+              />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span 
+                    className="text-xs font-mono font-black"
+                    style={{ color: card.accentColor }}
+                  >
+                    {card.number}
+                  </span>
+                  <h2 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
+                    {card.title}
+                  </h2>
+                  {isVideo && (
+                    <button
+                      type="button"
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="pointer-events-auto ml-2 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 cursor-pointer"
+                      title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                      ) : (
+                        <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
+                  {card.subtitle}
+                </span>
+              </div>
+            </div>
+
+            {/* Margen derecho reservado alineado con el botón Salir */}
+            <div className="w-24 shrink-0 pointer-events-none" />
+          </div>
+
+          {/* =====================================================================
+              CAPA 0 (FONDO): EL VIDEO / MEDIA STAGE (z-index: 0, Velocidad: 0.50x)
+              Fijo al viewport con difuminados de borde infinitos (cero cortes en scroll)
+              ===================================================================== */}
+          <div className="fixed inset-x-0 top-0 h-screen overflow-hidden pointer-events-none z-0">
             <div 
               ref={videoLayerRef}
               style={{
@@ -182,11 +292,11 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 />
               )}
 
-              {/* Viñetas y difuminados de borde en capa superior */}
-              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent pointer-events-none z-10" />
-              <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-none z-10" />
-              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-950/80 to-transparent pointer-events-none z-10" />
-              <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-950/80 to-transparent pointer-events-none z-10" />
+              {/* Viñetas y difuminados de borde continuos sin cortes bruscos */}
+              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-x-0 bottom-0 h-72 md:h-96 bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-slate-950/85 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-slate-950/85 to-transparent pointer-events-none z-10" />
               <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-15 pointer-events-none z-10`} />
             </div>
           </div>
@@ -194,19 +304,21 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           {/* =====================================================================
               CAPA 1 (INTERMEDIA): FONDO CUADRICULADO REACTIVO (z-index: 10, Velocidad: 0.75x)
               Flota sobre el video y por debajo de los cards, con diferencia de 1/4
+              Acelerado por GPU puro (cero repaints de backgroundPosition)
               ===================================================================== */}
           <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
-            {/* Cuadrícula Blueprint sutil que avanza en parallax sobre el video */}
+            {/* Cuadrícula Blueprint continua con GPU translate3d (ultra-fluido) */}
             <div 
               ref={gridLayerRef}
-              className="absolute inset-0 opacity-[0.055] pointer-events-none"
+              className="absolute -top-[50%] inset-x-0 h-[200%] opacity-[0.055] pointer-events-none will-change-transform"
               style={{
                 backgroundImage: `
                   linear-gradient(to right, #ffffff 1px, transparent 1px),
                   linear-gradient(to bottom, #ffffff 1px, transparent 1px)
                 `,
                 backgroundSize: '48px 48px',
-                backgroundPosition: '0px 0px'
+                transform: 'translate3d(0, 0px, 0)',
+                backfaceVisibility: 'hidden'
               }}
             />
 
@@ -240,16 +352,16 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
               CAPA 2 (SUPERIOR): CARDS Y TEXTOS (z-index: 20, Velocidad: 1.00x)
               ===================================================================== */}
           <div className="relative z-20 w-full min-h-screen">
-            {/* Hero Text & Badges al pie del video */}
+            {/* Hero Text & Badges al pie del video: Deja el video 100% visible y protagónico */}
             <div 
               ref={heroTextRef}
               style={{
                 transform: 'translate3d(0, 0px, 0)',
                 willChange: 'transform, opacity'
               }}
-              className="pt-[70vh] md:pt-[74vh] pb-8 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
+              className="pt-[78vh] md:pt-[82vh] pb-6 px-6 md:px-12 max-w-5xl mx-auto flex flex-col items-start gap-4 pointer-events-none"
             >
-              {/* Badges y Control de Sonido ubicados juntos al pie del video */}
+              {/* Badges de Categoría y Ubicación al pie del video */}
               <div className="flex flex-wrap items-center gap-2.5 pointer-events-auto">
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${card.badgeBg}`}>
                   {card.category}
@@ -262,27 +374,6 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                   <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] font-mono uppercase tracking-wider">
                     Video Demo
                   </span>
-                )}
-                {/* Control de Audio reubicado al pie del video */}
-                {isVideo && (
-                  <button
-                    type="button"
-                    onClick={() => setIsMuted(!isMuted)}
-                    className="px-3.5 py-1 rounded-full bg-slate-900/95 hover:bg-black text-white border border-white/20 flex items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg hover:border-white/40"
-                    title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
-                  >
-                    {isMuted ? (
-                      <>
-                        <VolumeX className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Activar Sonido</span>
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-300">Sonido Activo</span>
-                      </>
-                    )}
-                  </button>
                 )}
               </div>
 
@@ -298,7 +389,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 </h1>
               </div>
 
-              <p className="text-lg md:text-xl text-slate-200 font-light max-w-2xl drop-shadow-md">
+              <p className="text-base md:text-lg text-slate-200 font-light max-w-2xl drop-shadow-md">
                 {card.subtitle}
               </p>
             </div>
@@ -404,76 +495,6 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* =====================================================================
-              COLLAPSING TOOLBAR FLOTANTE (z-index: 40) & BOTÓN SALIR (z-index: 50)
-              ===================================================================== */}
-          <div className="sticky top-0 z-40 w-full pointer-events-none h-0 overflow-visible">
-            <div
-              ref={toolbarRef}
-              style={{
-                opacity: 0,
-                transform: 'translate3d(0, -20px, 0)',
-                pointerEvents: 'none',
-                visibility: 'hidden'
-              }}
-              className="w-full px-4 md:px-8 py-3 bg-slate-950/95 border-b border-white/10 shadow-2xl flex items-center justify-between"
-            >
-              {/* Identidad y Título de la Solución que emerge al scrollear */}
-              <div className="flex items-center gap-3">
-                <MicroLogo
-                  variant="badge"
-                  accentColor={card.accentColor}
-                  size="sm"
-                />
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span 
-                      className="text-xs font-mono font-black"
-                      style={{ color: card.accentColor }}
-                    >
-                      {card.number}
-                    </span>
-                    <h2 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
-                      {card.title}
-                    </h2>
-                    {isVideo && (
-                      <button
-                        type="button"
-                        onClick={() => setIsMuted(!isMuted)}
-                        className="pointer-events-auto ml-2 p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 cursor-pointer"
-                        title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
-                      >
-                        {isMuted ? (
-                          <VolumeX className="w-3.5 h-3.5 text-rose-400" />
-                        ) : (
-                          <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
-                    {card.subtitle}
-                  </span>
-                </div>
-              </div>
-
-              {/* Espacio reservado a la derecha alineado con el botón Salir */}
-              <div className="w-24 shrink-0 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Botón flotante Salir (Esc) */}
-          <div className="sticky top-3.5 z-50 flex justify-end px-4 md:px-8 pointer-events-none h-0">
-            <button
-              onClick={onClose}
-              className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
-              title="Salir (Esc)"
-            >
-              <span>Salir</span>
-              <X className="w-3.5 h-3.5 text-sky-300" />
-            </button>
           </div>
         </motion.div>
       )}
