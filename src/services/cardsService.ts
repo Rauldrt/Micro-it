@@ -63,7 +63,9 @@ export const subscribeToCards = (
           } else {
             const cards: CardItem[] = [];
             snapshot.forEach((docSnap) => {
-              cards.push({ id: docSnap.id, ...docSnap.data() } as CardItem);
+              const data = docSnap.data();
+              const fallback = CARDS_DATA.find((c) => c.id === docSnap.id || c.number === data.number);
+              cards.push({ ...fallback, ...data, id: docSnap.id } as CardItem);
             });
             cards.sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
             localStorage.setItem('microit_cards_backup', JSON.stringify(cards));

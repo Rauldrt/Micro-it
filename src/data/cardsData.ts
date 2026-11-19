@@ -66,9 +66,9 @@ export const CARDS_DATA: CardItem[] = [
     ],
     longDescription: 'Plataforma de escritorio para comunicación masiva por WhatsApp. Carga contactos desde CSV, personaliza mensajes con variables dinámicas ({nombre}), guarda plantillas recurrentes y protege tu línea comercial con pausas inteligentes programadas.',
     tags: ['WhatsApp Marketing', 'Automatización', 'B2B', 'Desktop App'],
-    version: '1.1.0',
-    downloadUrl: 'https://github.com/Rauldrt/whatsapp-sender-releases',
-    fileSize: '94.6 MB'
+    version: '1.2.0',
+    downloadUrl: 'https://github.com/Rauldrt/whatsapp-sender-releases/releases/download/v1.2.0/WhatsApp-Sender-Pro-Setup-1.2.0.exe',
+    fileSize: '310.4 MB'
   },
   {
     id: 'card-4',
