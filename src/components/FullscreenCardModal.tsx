@@ -16,16 +16,20 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   onClose
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const spotlightRef = useRef<HTMLDivElement>(null);
-  const videoLayerRef = useRef<HTMLDivElement>(null);
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  const heroTextRef = useRef<HTMLDivElement>(null);
+  
+  // Referencias para las 3 capas del Parallax
+  const videoLayerRef = useRef<HTMLDivElement>(null); // Capa 0: Fondo (Video)
+  const gridLayerRef = useRef<HTMLDivElement>(null);  // Capa 1: Intermedia (Cuadrícula Blueprint)
+  const midLightsRef = useRef<HTMLDivElement>(null);  // Capa 1: Intermedia (Luces y Spotlight)
+  const spotlightRef = useRef<HTMLDivElement>(null);  // Spotlight reactivo al cursor
+  const heroTextRef = useRef<HTMLDivElement>(null);   // Capa 2: Superior (Texto Hero)
+  const toolbarRef = useRef<HTMLDivElement>(null);    // Toolbar superior fija
 
   const [isMuted, setIsMuted] = useState(true);
   const mouseRafRef = useRef<number | null>(null);
   const scrollRafRef = useRef<number | null>(null);
 
-  // MouseMove de ultra-alto rendimiento: actualiza directamente el shader sin re-renderizar React (batched por frame)
+  // MouseMove de ultra-alto rendimiento: actualiza el spotlight directamente en la capa intermedia
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!spotlightRef.current || !card) return;
     const clientX = e.clientX;
@@ -34,23 +38,44 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     if (mouseRafRef.current !== null) cancelAnimationFrame(mouseRafRef.current);
     mouseRafRef.current = requestAnimationFrame(() => {
       if (spotlightRef.current) {
-        spotlightRef.current.style.background = `radial-gradient(750px circle at ${clientX}px ${clientY}px, ${accentColor}25 0%, transparent 70%)`;
+        spotlightRef.current.style.background = `radial-gradient(750px circle at ${clientX}px ${clientY}px, ${accentColor}28 0%, transparent 70%)`;
       }
       mouseRafRef.current = null;
     });
   };
 
-  // Actualización inmediata y síncrona en cada tick de scroll: Cero latencia y cero saltos por pasos al arrastrar la barra
+  /**
+   * Parallax Cinemático de 3 Capas con diferencia de 1/4 (25%) entre cada una:
+   * - Capa 2 (Superior - Cards y Textos): Velocidad 1.00 (Flujo de scroll normal)
+   * - Capa 1 (Intermedia - Cuadrícula Blueprint): Velocidad 0.75 (Diferencia de 1/4 con la superior)
+   * - Capa 0 (Fondo - Video): Velocidad 0.50 (Diferencia de 1/4 con la intermedia)
+   */
   const updateVisuals = (scrollTop: number) => {
-    // 1. Parallax cinematográfico 3:1 (exactamente a 1/3 de velocidad en tiempo real)
+    // 1. CAPA 0 (FONDO - VIDEO): Avanza a velocidad 0.50x
     if (videoLayerRef.current) {
-      const mediaY = scrollTop * (2 / 3);
+      const mediaY = scrollTop * 0.50;
       const heroOpacity = Math.max(0.12, 1 - scrollTop / 1100);
       videoLayerRef.current.style.transform = `translate3d(0, ${mediaY}px, 0)`;
       videoLayerRef.current.style.opacity = `${heroOpacity}`;
     }
 
-    // 2. Collapsing Toolbar: emerge suavemente cuando el título del pie de video se oculta
+    // 2. CAPA 1 (INTERMEDIA - CUADRÍCULA & LUCES): Avanza a velocidad 0.75x
+    if (gridLayerRef.current) {
+      gridLayerRef.current.style.backgroundPositionY = `${-scrollTop * 0.75}px`;
+    }
+    if (midLightsRef.current) {
+      midLightsRef.current.style.transform = `translate3d(0, ${-scrollTop * 0.25}px, 0)`;
+    }
+
+    // 3. CAPA 2 (SUPERIOR - CARDS Y TEXTOS): Avanza a velocidad 1.00x
+    if (heroTextRef.current) {
+      const opacity = Math.max(0, 1 - scrollTop / 480);
+      const y = scrollTop * -0.1;
+      heroTextRef.current.style.opacity = `${opacity}`;
+      heroTextRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
+    }
+
+    // Collapsing Toolbar superior
     if (toolbarRef.current) {
       const progress = Math.min(Math.max((scrollTop - 360) / 160, 0), 1);
       const y = (1 - progress) * -20;
@@ -58,14 +83,6 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
       toolbarRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
       toolbarRef.current.style.pointerEvents = progress > 0.02 ? 'auto' : 'none';
       toolbarRef.current.style.visibility = progress > 0.02 ? 'visible' : 'hidden';
-    }
-
-    // 3. Hero Text al pie del video: se atenúa suavemente conforme entra en la zona superior
-    if (heroTextRef.current) {
-      const opacity = Math.max(0, 1 - scrollTop / 480);
-      const y = scrollTop * -0.1;
-      heroTextRef.current.style.opacity = `${opacity}`;
-      heroTextRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
     }
   };
 
@@ -78,7 +95,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     });
   };
 
-  // Limpieza de eventos y rAF pendientes al desmontar
+  // Limpieza de eventos al desmontar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -129,114 +146,10 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
           className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white overflow-y-auto overflow-x-hidden select-none modal-smooth-scrollbar will-change-scroll"
           onScroll={handleScroll}
         >
-          {/* 1. FONDO TÉCNICO CONTINUO DE MICRO-IT (Fixed & GPU Nativo sin filtros blur pesados) */}
-          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            {/* Cuadrícula Blueprint sutil */}
-            <div 
-              className="absolute inset-0 opacity-[0.035]"
-              style={{
-                backgroundImage: `
-                  linear-gradient(to right, #ffffff 1px, transparent 1px),
-                  linear-gradient(to bottom, #ffffff 1px, transparent 1px)
-                `,
-                backgroundSize: '48px 48px'
-              }}
-            />
-
-            {/* Spotlight Linterna Reactivo al Cursor (Manipulado directamente por ref sin re-renderizar) */}
-            <div 
-              ref={spotlightRef}
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `radial-gradient(750px circle at 50% 30%, ${card.accentColor}25 0%, transparent 70%)`
-              }}
-            />
-
-            {/* Resplandor Ambiental Polar Reactivo (GPU Nativo con radial-gradient puro sin convolución Gaussian blur) */}
-            <div 
-              className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] h-[520px] rounded-full pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse at center, ${card.accentColor}33 0%, ${card.accentColor}0f 50%, transparent 75%)`
-              }}
-            />
-            <div 
-              className="absolute bottom-10 right-10 w-[520px] h-[400px] rounded-full pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse at center, rgba(14, 165, 233, 0.22) 0%, rgba(14, 165, 233, 0.06) 50%, transparent 75%)`
-              }}
-            />
-          </div>
-
-          {/* 2. COLLAPSING TOOLBAR FLOTANTE (Animada por hardware vía ref) */}
-          <div className="sticky top-0 z-40 w-full pointer-events-none h-0 overflow-visible">
-            <div
-              ref={toolbarRef}
-              style={{
-                opacity: 0,
-                transform: 'translate3d(0, -20px, 0)',
-                pointerEvents: 'none',
-                visibility: 'hidden'
-              }}
-              className="w-full px-4 md:px-8 py-3 bg-slate-950/95 border-b border-white/10 shadow-2xl flex items-center justify-between"
-            >
-              {/* Identidad y Título de la Solución que emerge al scrollear */}
-              <div className="flex items-center gap-3">
-                <MicroLogo
-                  variant="badge"
-                  accentColor={card.accentColor}
-                  size="sm"
-                />
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span 
-                      className="text-xs font-mono font-black"
-                      style={{ color: card.accentColor }}
-                    >
-                      {card.number}
-                    </span>
-                    <h2 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
-                      {card.title}
-                    </h2>
-                    {isVideo && (
-                      <button
-                        type="button"
-                        onClick={() => setIsMuted(!isMuted)}
-                        className="pointer-events-auto ml-2 p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 cursor-pointer"
-                        title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
-                      >
-                        {isMuted ? (
-                          <VolumeX className="w-3.5 h-3.5 text-rose-400" />
-                        ) : (
-                          <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
-                    {card.subtitle}
-                  </span>
-                </div>
-              </div>
-
-              {/* Espacio reservado a la derecha alineado con el botón Salir */}
-              <div className="w-24 shrink-0 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* 3. BOTÓN FLOTANTE SALIR (Esc) - Ligero y optimizado */}
-          <div className="sticky top-3.5 z-50 flex justify-end px-4 md:px-8 pointer-events-none h-0">
-            <button
-              onClick={onClose}
-              className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
-              title="Salir (Esc)"
-            >
-              <span>Salir</span>
-              <X className="w-3.5 h-3.5 text-sky-300" />
-            </button>
-          </div>
-
-          {/* 4. ESCENARIO PARALLAX 3:1 (Hardware Overlay Puro: aceleración de video nativa sin mask-image ni mix-blend) */}
-          <div className="absolute inset-x-0 top-0 h-[88vh] min-h-[600px] max-h-[940px] overflow-hidden pointer-events-none z-10">
+          {/* =====================================================================
+              CAPA 0 (FONDO): EL VIDEO / MEDIA STAGE (z-index: 0, Velocidad: 0.50x)
+              ===================================================================== */}
+          <div className="absolute inset-x-0 top-0 h-[88vh] min-h-[600px] max-h-[940px] overflow-hidden pointer-events-none z-0">
             <div 
               ref={videoLayerRef}
               style={{
@@ -269,7 +182,7 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 />
               )}
 
-              {/* Viñetas y difuminados de borde en capa superior (Cero costo de GPU, sin romper la aceleración del video) */}
+              {/* Viñetas y difuminados de borde en capa superior */}
               <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-950/80 to-transparent pointer-events-none z-10" />
@@ -278,7 +191,54 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
             </div>
           </div>
 
-          {/* 5. CAPA DE ELEMENTOS EN SCROLL (Flujo de documento nativo a 120fps/144fps) */}
+          {/* =====================================================================
+              CAPA 1 (INTERMEDIA): FONDO CUADRICULADO REACTIVO (z-index: 10, Velocidad: 0.75x)
+              Flota sobre el video y por debajo de los cards, con diferencia de 1/4
+              ===================================================================== */}
+          <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+            {/* Cuadrícula Blueprint sutil que avanza en parallax sobre el video */}
+            <div 
+              ref={gridLayerRef}
+              className="absolute inset-0 opacity-[0.055] pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, #ffffff 1px, transparent 1px),
+                  linear-gradient(to bottom, #ffffff 1px, transparent 1px)
+                `,
+                backgroundSize: '48px 48px',
+                backgroundPosition: '0px 0px'
+              }}
+            />
+
+            {/* Spotlight Linterna Reactivo al Cursor */}
+            <div 
+              ref={spotlightRef}
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(750px circle at 50% 30%, ${card.accentColor}25 0%, transparent 70%)`
+              }}
+            />
+
+            {/* Resplandor Ambiental Polar de la Capa Intermedia */}
+            <div ref={midLightsRef} className="absolute inset-0 pointer-events-none will-change-transform">
+              <div 
+                className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] h-[520px] rounded-full pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse at center, ${card.accentColor}33 0%, ${card.accentColor}0f 50%, transparent 75%)`
+                }}
+              />
+              <div 
+                className="absolute bottom-10 right-10 w-[520px] h-[400px] rounded-full pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse at center, rgba(14, 165, 233, 0.22) 0%, rgba(14, 165, 233, 0.06) 50%, transparent 75%)`
+                }}
+              />
+            </div>
+          </div>
+
+          {/* =====================================================================
+              CAPA 2 (SUPERIOR): CARDS Y TEXTOS (z-index: 20, Velocidad: 1.00x)
+              ===================================================================== */}
           <div className="relative z-20 w-full min-h-screen">
             {/* Hero Text & Badges al pie del video */}
             <div 
@@ -444,6 +404,76 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* =====================================================================
+              COLLAPSING TOOLBAR FLOTANTE (z-index: 40) & BOTÓN SALIR (z-index: 50)
+              ===================================================================== */}
+          <div className="sticky top-0 z-40 w-full pointer-events-none h-0 overflow-visible">
+            <div
+              ref={toolbarRef}
+              style={{
+                opacity: 0,
+                transform: 'translate3d(0, -20px, 0)',
+                pointerEvents: 'none',
+                visibility: 'hidden'
+              }}
+              className="w-full px-4 md:px-8 py-3 bg-slate-950/95 border-b border-white/10 shadow-2xl flex items-center justify-between"
+            >
+              {/* Identidad y Título de la Solución que emerge al scrollear */}
+              <div className="flex items-center gap-3">
+                <MicroLogo
+                  variant="badge"
+                  accentColor={card.accentColor}
+                  size="sm"
+                />
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className="text-xs font-mono font-black"
+                      style={{ color: card.accentColor }}
+                    >
+                      {card.number}
+                    </span>
+                    <h2 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
+                      {card.title}
+                    </h2>
+                    {isVideo && (
+                      <button
+                        type="button"
+                        onClick={() => setIsMuted(!isMuted)}
+                        className="pointer-events-auto ml-2 p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 cursor-pointer"
+                        title={isMuted ? 'Activar Audio' : 'Silenciar Audio'}
+                      >
+                        {isMuted ? (
+                          <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
+                    {card.subtitle}
+                  </span>
+                </div>
+              </div>
+
+              {/* Espacio reservado a la derecha alineado con el botón Salir */}
+              <div className="w-24 shrink-0 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Botón flotante Salir (Esc) */}
+          <div className="sticky top-3.5 z-50 flex justify-end px-4 md:px-8 pointer-events-none h-0">
+            <button
+              onClick={onClose}
+              className="pointer-events-auto h-9 px-3.5 rounded-full bg-black/90 hover:bg-black text-white text-xs font-semibold border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-aurora-symbol shadow-xl"
+              title="Salir (Esc)"
+            >
+              <span>Salir</span>
+              <X className="w-3.5 h-3.5 text-sky-300" />
+            </button>
           </div>
         </motion.div>
       )}
