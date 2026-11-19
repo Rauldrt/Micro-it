@@ -610,6 +610,32 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
             />
           </div>
 
+          {/* Versión de la Aplicación y Enlace de Descarga Directa */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs p-3.5 rounded-2xl bg-white/5 border border-white/10">
+            <div>
+              <label className="text-slate-300 font-bold block mb-1">Versión Actual de la App</label>
+              <input 
+                type="text" 
+                value={editingCard.version || ''} 
+                onChange={(e) => setEditingCard({ ...editingCard, version: e.target.value })} 
+                placeholder="Ej: 1.1.0"
+                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-400">Determina el nombre y número oficial de versión descargado</span>
+            </div>
+            <div>
+              <label className="text-slate-300 font-bold block mb-1">Enlace de Descarga (CDN / GitHub / Storage)</label>
+              <input 
+                type="text" 
+                value={editingCard.downloadUrl || ''} 
+                onChange={(e) => setEditingCard({ ...editingCard, downloadUrl: e.target.value })} 
+                placeholder="https://github.com/.../releases o URL directa"
+                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-400">Si es GitHub Releases, consulta y descarga el último .exe automáticamente</span>
+            </div>
+          </div>
+
           <div className="text-xs">
             <label className="text-slate-400 block mb-1">Descripción Breve (Visible en Carrusel)</label>
             <textarea 

@@ -19,6 +19,10 @@ export interface CardItem {
   }[];
   longDescription: string;
   tags: string[];
+  version?: string;
+  downloadUrl?: string;
+  fileSize?: string;
+  releaseDate?: string;
 }
 
 export type ActiveModule = 'carousel' | 'bottomElement';

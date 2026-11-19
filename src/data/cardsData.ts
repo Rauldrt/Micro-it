@@ -65,7 +65,9 @@ export const CARDS_DATA: CardItem[] = [
       { label: 'Licencia', value: 'Anual / Mensual' }
     ],
     longDescription: 'Plataforma de escritorio para comunicación masiva por WhatsApp. Carga contactos desde CSV, personaliza mensajes con variables dinámicas ({nombre}), guarda plantillas recurrentes y protege tu línea comercial con pausas inteligentes programadas.',
-    tags: ['WhatsApp Marketing', 'Automatización', 'B2B', 'Desktop App']
+    tags: ['WhatsApp Marketing', 'Automatización', 'B2B', 'Desktop App'],
+    version: '1.1.0',
+    fileSize: '94.6 MB'
   },
   {
     id: 'card-4',

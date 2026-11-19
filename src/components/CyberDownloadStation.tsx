@@ -30,6 +30,56 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
   const [showHUD, setShowHUD] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  // Versión dinámica y enlace de descarga:
+  // 1. Toma card.version si está definido (ej: '1.1.0')
+  // 2. Consulta en vivo GitHub Releases si card.downloadUrl es de un repo público
+  // 3. Fallback a la última versión disponible (1.1.0)
+  const [activeVersion, setActiveVersion] = useState<string>(card.version || '1.1.0');
+  const [downloadLink, setDownloadLink] = useState<string>(card.downloadUrl || '');
+  const [fileSize, setFileSize] = useState<string>(card.fileSize || '94.6 MB');
+
+  // Consulta automática en vivo a GitHub Releases si downloadUrl apunta a GitHub
+  useEffect(() => {
+    if (card.version) {
+      setActiveVersion(card.version);
+    }
+    if (card.downloadUrl) {
+      setDownloadLink(card.downloadUrl);
+    }
+    if (card.fileSize) {
+      setFileSize(card.fileSize);
+    }
+
+    // Auto-resolver la última versión real si se proporciona un repo de GitHub
+    if (card.downloadUrl && card.downloadUrl.includes('github.com')) {
+      const match = card.downloadUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+      if (match) {
+        const owner = match[1];
+        const repo = match[2];
+        fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data && data.tag_name) {
+              const cleanVer = data.tag_name.replace(/^v/, '');
+              setActiveVersion(cleanVer);
+              if (data.assets && data.assets.length > 0) {
+                const exeAsset = data.assets.find((a: any) => a.name.endsWith('.exe') || a.name.endsWith('.apk') || a.name.endsWith('.zip')) || data.assets[0];
+                if (exeAsset) {
+                  setDownloadLink(exeAsset.browser_download_url);
+                  if (exeAsset.size) {
+                    setFileSize(`${(exeAsset.size / (1024 * 1024)).toFixed(1)} MB`);
+                  }
+                }
+              }
+            }
+          })
+          .catch(() => {
+            // Silencioso: usa la versión estipulada en la tarjeta
+          });
+      }
+    }
+  }, [card]);
+
   // Detección automática del sistema operativo del visitante
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -47,7 +97,7 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
   const isAndroid = card.specs.some(s => s.value.toLowerCase().includes('android') || s.value.toLowerCase().includes('apk'));
   
   const fileExtension = isWindowsExe ? '.exe' : (isAndroid ? '.apk' : '.zip');
-  const fileName = `${card.title.replace(/\s+/g, '_')}_v1.0.9_Setup${fileExtension}`;
+  const fileName = `${card.title.replace(/\s+/g, '_')}_v${activeVersion}_Setup${fileExtension}`;
   const terminalCommand = `irm https://micro-it.dev/get/${card.id} | iex`;
 
   // Secuencia de descarga holográfica no convencional
@@ -73,13 +123,25 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
   };
 
   const triggerBrowserDownload = () => {
-    // Si la tarjeta tuviera una URL de descarga configurada en Firestore o datos, se usa.
-    // Como respaldo universal de Micro-it, generamos un paquete instalador ligero verificado
+    // Si la tarjeta tiene una URL de descarga real (GitHub Release, CDN, Dropbox o S3), se dispara directamente
+    if (downloadLink && downloadLink.trim() !== '') {
+      const link = document.createElement('a');
+      link.href = downloadLink;
+      link.download = fileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // Como respaldo universal certificado de Micro-it, generamos el paquete instalador verificado
     const dummyBlob = new Blob([
       `============================================================\n` +
       `  MICRO-IT STUDIO & APPS - INSTALADOR OFICIAL\n` +
       `  Solucion: ${card.title} (${card.subtitle})\n` +
-      `  Version: 1.0.9 (Build 2026.11-RC)\n` +
+      `  Version: ${activeVersion} (Ultima version disponible)\n` +
       `  Licencia: Prueba gratuita incluida de 100 envios/operaciones\n` +
       `============================================================\n\n` +
       `Instrucciones de instalacion rapida:\n` +
@@ -141,7 +203,7 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
               <span>Servidor CDN Activo</span>
             </span>
             <span className="text-slate-500">•</span>
-            <span className="text-slate-400">v1.0.9 Oficial</span>
+            <span className="text-slate-300 font-bold">v{activeVersion} Oficial</span>
           </div>
         </div>
 
@@ -252,7 +314,7 @@ export const CyberDownloadStation: React.FC<CyberDownloadStationProps> = ({ card
 
             {/* Subtexto aclaratorio */}
             <span className="text-[11px] text-slate-400 font-mono">
-              {fileName} (~94.6 MB)
+              {fileName} (~{fileSize})
             </span>
           </div>
         </div>
