@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CardItem } from '../types';
 import { saveCard, deleteCard, seedInitialCards } from '../services/cardsService';
-import { isFirebaseConfigured, getFirebaseConfig, getFirebaseAuth } from '../lib/firebase';
+import { isFirebaseConfigured, getFirebaseConfig } from '../lib/firebase';
+import { getFirebaseAuth } from '../lib/firebaseAdmin';
 import { 
   signInWithEmailAndPassword, 
   signOut, 

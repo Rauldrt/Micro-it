@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ImageOff } from 'lucide-react';
 
 interface LazyImageProps {
@@ -16,6 +16,11 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(false);
+    setIsError(false);
+  }, [src]);
 
   return (
     <div className={`relative overflow-hidden bg-slate-900/80 ${className}`}>
@@ -40,6 +45,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           src={src}
           alt={alt}
           loading="lazy"
+          decoding="async"
           onLoad={() => setIsLoaded(true)}
           onError={() => setIsError(true)}
           className={`w-full h-full object-cover transition-opacity duration-700 ease-out ${

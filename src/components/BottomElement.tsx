@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { motion } from 'motion/react';
 import { CardItem } from '../types';
 import { 
@@ -16,7 +16,10 @@ import {
   Database
 } from 'lucide-react';
 import { MicroLogo, LogoVariant } from './MicroLogo';
-import { AdminCardsPanel } from './AdminCardsPanel';
+
+const AdminCardsPanel = lazy(() =>
+  import('./AdminCardsPanel').then((m) => ({ default: m.AdminCardsPanel }))
+);
 
 interface BottomElementProps {
   cards?: CardItem[];
@@ -388,7 +391,15 @@ export const BottomElement: React.FC<BottomElementProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.28 }}
             >
-              <AdminCardsPanel cards={cards} />
+              <Suspense
+                fallback={
+                  <div className="py-12 text-center text-xs text-slate-400">
+                    Cargando panel de administración...
+                  </div>
+                }
+              >
+                <AdminCardsPanel cards={cards} />
+              </Suspense>
             </motion.div>
           )}
         </motion.div>

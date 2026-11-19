@@ -6,7 +6,7 @@ interface HeaderBarProps {
   activeCard: CardItem;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = ({
+export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
   activeCard
 }) => {
   return (
@@ -29,4 +29,4 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       </div>
     </header>
   );
-};
+});

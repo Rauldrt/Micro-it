@@ -22,12 +22,22 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   const heroTextRef = useRef<HTMLDivElement>(null);
 
   const [isMuted, setIsMuted] = useState(true);
+  const mouseRafRef = useRef<number | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
 
-  // MouseMove de ultra-alto rendimiento: actualiza directamente el shader sin re-renderizar React
+  // MouseMove de ultra-alto rendimiento: actualiza directamente el shader sin re-renderizar React (batched por frame)
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (spotlightRef.current && card) {
-      spotlightRef.current.style.background = `radial-gradient(750px circle at ${e.clientX}px ${e.clientY}px, ${card.accentColor}25 0%, transparent 70%)`;
-    }
+    if (!spotlightRef.current || !card) return;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    const accentColor = card.accentColor;
+    if (mouseRafRef.current !== null) cancelAnimationFrame(mouseRafRef.current);
+    mouseRafRef.current = requestAnimationFrame(() => {
+      if (spotlightRef.current) {
+        spotlightRef.current.style.background = `radial-gradient(750px circle at ${clientX}px ${clientY}px, ${accentColor}25 0%, transparent 70%)`;
+      }
+      mouseRafRef.current = null;
+    });
   };
 
   // Actualización inmediata y síncrona en cada tick de scroll: Cero latencia y cero saltos por pasos al arrastrar la barra
@@ -60,10 +70,15 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    updateVisuals(e.currentTarget.scrollTop);
+    const scrollTop = e.currentTarget.scrollTop;
+    if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    scrollRafRef.current = requestAnimationFrame(() => {
+      updateVisuals(scrollTop);
+      scrollRafRef.current = null;
+    });
   };
 
-  // Limpieza de eventos al desmontar
+  // Limpieza de eventos y rAF pendientes al desmontar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -75,6 +90,8 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
+      if (mouseRafRef.current !== null) cancelAnimationFrame(mouseRafRef.current);
+      if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
     };
   }, [card, onClose]);
 

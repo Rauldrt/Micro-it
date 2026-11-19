@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { motion, useMotionValue } from 'motion/react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { CardItem } from '../types';
 import { LazyImage } from './LazyImage';
 import { MapPin, Maximize2, ChevronUp, ChevronDown } from 'lucide-react';
@@ -26,19 +26,16 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
 
   // Responsive screen size check for small screen transition tuning
   const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
   );
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handleChange);
+    return () => mq.removeEventListener('change', handleChange);
   }, []);
-
-  // Motion value for touch/drag tracking
-  const dragY = useMotionValue(0);
 
   // Helper to get relative offset (-3 to +3) with circular wrap
   const getOffset = (cardIndex: number) => {
@@ -48,13 +45,24 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
     return diff;
   };
 
-  const handleNext = () => {
-    onSelectIndex((currentIndex + 1) % total);
-  };
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
 
-  const handlePrev = () => {
-    onSelectIndex((currentIndex - 1 + total) % total);
-  };
+  const totalRef = useRef(total);
+  totalRef.current = total;
+
+  const onSelectIndexRef = useRef(onSelectIndex);
+  onSelectIndexRef.current = onSelectIndex;
+
+  const handleNext = useCallback(() => {
+    const len = totalRef.current;
+    if (len > 0) onSelectIndexRef.current((currentIndexRef.current + 1) % len);
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    const len = totalRef.current;
+    if (len > 0) onSelectIndexRef.current((currentIndexRef.current - 1 + len) % len);
+  }, []);
 
   // Wheel listener for vertical 3D rotation
   useEffect(() => {
@@ -78,7 +86,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
 
     el.addEventListener('wheel', handleWheel, { passive: true });
     return () => el.removeEventListener('wheel', handleWheel);
-  }, [currentIndex, total, isExpanded]);
+  }, [isExpanded, handleNext, handlePrev]);
 
   if (!isExpanded) return null;
 

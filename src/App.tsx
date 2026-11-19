@@ -1,19 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CARDS_DATA } from './data/cardsData';
 import { ActiveModule, CardItem } from './types';
 import { HeaderBar } from './components/HeaderBar';
 import { VerticalCarousel } from './components/VerticalCarousel';
-import { BottomElement } from './components/BottomElement';
-import { FullscreenCardModal } from './components/FullscreenCardModal';
 import { subscribeToCards } from './services/cardsService';
+
+const BottomElement = lazy(() =>
+  import('./components/BottomElement').then((m) => ({ default: m.BottomElement }))
+);
+const FullscreenCardModal = lazy(() =>
+  import('./components/FullscreenCardModal').then((m) => ({ default: m.FullscreenCardModal }))
+);
 
 export default function App() {
   const [cards, setCards] = useState<CardItem[]>(CARDS_DATA);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [activeModule, setActiveModule] = useState<ActiveModule>('carousel');
   const [fullscreenCard, setFullscreenCard] = useState<CardItem | null>(null);
+  const [hasOpenedModal, setHasOpenedModal] = useState<boolean>(false);
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(4);
+
+  const openFullscreenCard = useCallback((card: CardItem) => {
+    setHasOpenedModal(true);
+    setFullscreenCard(card);
+  }, []);
 
   // Suscripción reactiva en tiempo real a Firestore (o respaldo local)
   useEffect(() => {
@@ -53,14 +64,14 @@ export default function App() {
       } else if (e.key === 'Enter' || e.key === ' ') {
         if (activeModule === 'carousel') {
           e.preventDefault();
-          setFullscreenCard(activeCard);
+          openFullscreenCard(activeCard);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePrevCard, handleNextCard, activeCard, activeModule, fullscreenCard]);
+  }, [handlePrevCard, handleNextCard, activeCard, activeModule, fullscreenCard, openFullscreenCard]);
 
   // AutoPlay Timer
   useEffect(() => {
@@ -117,7 +128,7 @@ export default function App() {
               cards={cards}
               currentIndex={currentIndex}
               onSelectIndex={setCurrentIndex}
-              onOpenCardDetails={(card) => setFullscreenCard(card)}
+              onOpenCardDetails={openFullscreenCard}
               isExpanded={activeModule === 'carousel'}
               onCompress={() => setActiveModule('bottomElement')}
             />
@@ -148,30 +159,38 @@ export default function App() {
           </div>
 
           <div className="panel-content">
-            <BottomElement
-              cards={cards}
-              activeCard={activeCard}
-              isExpanded={activeModule === 'bottomElement'}
-              onCompress={() => setActiveModule('carousel')}
-              autoPlay={autoPlay}
-              onToggleAutoPlay={() => setAutoPlay(!autoPlay)}
-              speed={speed}
-              onChangeSpeed={setSpeed}
-              cardIndex={currentIndex}
-              totalCards={cards.length}
-              onSelectCard={(idx) => {
-                setCurrentIndex(idx);
-              }}
-            />
+            {activeModule === 'bottomElement' && (
+              <Suspense fallback={null}>
+                <BottomElement
+                  cards={cards}
+                  activeCard={activeCard}
+                  isExpanded={true}
+                  onCompress={() => setActiveModule('carousel')}
+                  autoPlay={autoPlay}
+                  onToggleAutoPlay={() => setAutoPlay(!autoPlay)}
+                  speed={speed}
+                  onChangeSpeed={setSpeed}
+                  cardIndex={currentIndex}
+                  totalCards={cards.length}
+                  onSelectCard={(idx) => {
+                    setCurrentIndex(idx);
+                  }}
+                />
+              </Suspense>
+            )}
           </div>
         </div>
       </main>
 
       {/* Fullscreen Card Detail Modal */}
-      <FullscreenCardModal
-        card={fullscreenCard}
-        onClose={() => setFullscreenCard(null)}
-      />
+      {hasOpenedModal && (
+        <Suspense fallback={null}>
+          <FullscreenCardModal
+            card={fullscreenCard}
+            onClose={() => setFullscreenCard(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

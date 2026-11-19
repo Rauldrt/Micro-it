@@ -1,8 +1,3 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
-
 // Configuración canónica pública de Firebase para Micro-it Studio
 // En aplicaciones cliente web (SPA), la configuración de Firebase es pública por diseño de Google.
 // La seguridad real y absoluta reside en las reglas de Firestore (firestore.rules) y Firebase Auth.
@@ -32,25 +27,4 @@ export const getFirebaseConfig = () => {
 export const isFirebaseConfigured = (): boolean => {
   const config = getFirebaseConfig();
   return Boolean(config.apiKey && config.projectId);
-};
-
-export const getFirebaseApp = () => {
-  const config = getFirebaseConfig();
-  if (!isFirebaseConfigured()) return null;
-  return getApps().length > 0 ? getApp() : initializeApp(config);
-};
-
-export const getDb = () => {
-  const app = getFirebaseApp();
-  return app ? getFirestore(app) : null;
-};
-
-export const getFirebaseAuth = () => {
-  const app = getFirebaseApp();
-  return app ? getAuth(app) : null;
-};
-
-export const getFirebaseStorage = () => {
-  const app = getFirebaseApp();
-  return app ? getStorage(app) : null;
 };

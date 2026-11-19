@@ -1,5 +1,5 @@
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { getFirebaseStorage } from '../lib/firebase';
+import { getFirebaseStorage } from '../lib/firebaseAdmin';
 
 export interface VideoProcessingProgress {
   step: 'reading' | 'extracting-poster' | 'compressing' | 'uploading' | 'completed' | 'error';

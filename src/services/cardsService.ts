@@ -1,103 +1,124 @@
-import { 
-  collection, 
-  getDocs, 
-  setDoc, 
-  doc, 
-  deleteDoc, 
-  onSnapshot 
-} from 'firebase/firestore';
-import { getDb, isFirebaseConfigured } from '../lib/firebase';
+import { isFirebaseConfigured } from '../lib/firebase';
 import { CardItem } from '../types';
 import { CARDS_DATA } from '../data/cardsData';
 
 const COLLECTION_NAME = 'cards';
 
-// Escuchar tarjetas en tiempo real si Firebase está configurado, con fallback local
+const getLocalCardsFallback = (): CardItem[] => {
+  if (typeof window === 'undefined') return CARDS_DATA;
+  const savedLocal = localStorage.getItem('microit_cards_backup');
+  if (savedLocal) {
+    try {
+      const parsed = JSON.parse(savedLocal);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Error parseando backup local:', e);
+    }
+  }
+  return CARDS_DATA;
+};
+
+const loadFirestore = async () => {
+  if (!isFirebaseConfigured()) return null;
+  const [{ getFirebaseApp }, firestore] = await Promise.all([
+    import('../lib/firebaseApp'),
+    import('firebase/firestore'),
+  ]);
+  const app = getFirebaseApp();
+  if (!app) return null;
+  return { db: firestore.getFirestore(app), firestore };
+};
+
+// Escuchar tarjetas en tiempo real cargando Firestore de forma diferida tras el render inicial
 export const subscribeToCards = (
   onCardsUpdate: (cards: CardItem[]) => void,
   onError?: (err: unknown) => void
 ) => {
-  const db = getDb();
+  // Respuesta instantánea desde respaldo local o CARDS_DATA sin bloquear el bundle inicial
+  onCardsUpdate(getLocalCardsFallback());
 
-  // Si no está configurado Firebase o no hay DB, leemos de localStorage o data estática
-  if (!db || !isFirebaseConfigured()) {
-    const savedLocal = localStorage.getItem('microit_cards_backup');
-    if (savedLocal) {
-      try {
-        const parsed = JSON.parse(savedLocal);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          onCardsUpdate(parsed);
-          return () => {};
-        }
-      } catch (e) {
-        console.error('Error parseando backup local:', e);
-      }
-    }
-    onCardsUpdate(CARDS_DATA);
+  if (!isFirebaseConfigured()) {
     return () => {};
   }
 
-  const cardsCol = collection(db, COLLECTION_NAME);
+  let cancelled = false;
+  let unsubscribeSnapshot: (() => void) | null = null;
 
-  return onSnapshot(
-    cardsCol,
-    (snapshot) => {
-      if (snapshot.empty) {
-        // Colección vacía: seed inicial automático con CARDS_DATA
-        seedInitialCards().then((seeded) => {
-          onCardsUpdate(seeded);
-        });
-      } else {
-        const cards: CardItem[] = [];
-        snapshot.forEach((docSnap) => {
-          cards.push({ id: docSnap.id, ...docSnap.data() } as CardItem);
-        });
-        // Ordenar por número
-        cards.sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
-        localStorage.setItem('microit_cards_backup', JSON.stringify(cards));
-        onCardsUpdate(cards);
-      }
-    },
-    (error) => {
-      console.warn('Firestore offline o error de conexión, usando respaldo:', error);
-      if (onError) onError(error);
-      const savedLocal = localStorage.getItem('microit_cards_backup');
-      if (savedLocal) {
-        try {
-          onCardsUpdate(JSON.parse(savedLocal));
-        } catch {
-          onCardsUpdate(CARDS_DATA);
+  loadFirestore()
+    .then((ctx) => {
+      if (cancelled || !ctx) return;
+      const { db, firestore } = ctx;
+      const cardsCol = firestore.collection(db, COLLECTION_NAME);
+
+      unsubscribeSnapshot = firestore.onSnapshot(
+        cardsCol,
+        (snapshot) => {
+          if (cancelled) return;
+          if (snapshot.empty) {
+            seedInitialCards().then((seeded) => {
+              if (!cancelled) onCardsUpdate(seeded);
+            });
+          } else {
+            const cards: CardItem[] = [];
+            snapshot.forEach((docSnap) => {
+              cards.push({ id: docSnap.id, ...docSnap.data() } as CardItem);
+            });
+            cards.sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
+            localStorage.setItem('microit_cards_backup', JSON.stringify(cards));
+            onCardsUpdate(cards);
+          }
+        },
+        (error) => {
+          console.warn('Firestore offline o error de conexión, usando respaldo:', error);
+          if (onError) onError(error);
+          if (!cancelled) {
+            onCardsUpdate(getLocalCardsFallback());
+          }
         }
-      } else {
-        onCardsUpdate(CARDS_DATA);
-      }
+      );
+    })
+    .catch((error) => {
+      console.warn('No se pudo inicializar Firestore de forma diferida:', error);
+      if (onError) onError(error);
+    });
+
+  return () => {
+    cancelled = true;
+    if (unsubscribeSnapshot) {
+      unsubscribeSnapshot();
+      unsubscribeSnapshot = null;
     }
-  );
+  };
 };
 
 // Cargar tarjetas de muestra a Firestore si está vacío
 export const seedInitialCards = async (): Promise<CardItem[]> => {
-  const db = getDb();
-  if (!db) return CARDS_DATA;
+  const ctx = await loadFirestore();
+  if (!ctx) return CARDS_DATA;
 
-  for (const card of CARDS_DATA) {
-    const ref = doc(db, COLLECTION_NAME, card.id);
-    await setDoc(ref, card);
-  }
+  const { db, firestore } = ctx;
+  await Promise.all(
+    CARDS_DATA.map((card) =>
+      firestore.setDoc(firestore.doc(db, COLLECTION_NAME, card.id), card)
+    )
+  );
   return CARDS_DATA;
 };
 
 // Guardar o actualizar una tarjeta
 export const saveCard = async (card: CardItem): Promise<void> => {
-  const db = getDb();
-  if (db && isFirebaseConfigured()) {
-    const ref = doc(db, COLLECTION_NAME, card.id);
-    await setDoc(ref, card, { merge: true });
+  const ctx = await loadFirestore();
+  if (ctx) {
+    const { db, firestore } = ctx;
+    const ref = firestore.doc(db, COLLECTION_NAME, card.id);
+    await firestore.setDoc(ref, card, { merge: true });
   }
 
   // Actualizar también respaldo en localStorage
   const localBackup = localStorage.getItem('microit_cards_backup');
-  let currentCards: CardItem[] = localBackup ? JSON.parse(localBackup) : [...CARDS_DATA];
+  const currentCards: CardItem[] = localBackup ? JSON.parse(localBackup) : [...CARDS_DATA];
   const idx = currentCards.findIndex((c) => c.id === card.id);
   if (idx >= 0) {
     currentCards[idx] = card;
@@ -109,10 +130,11 @@ export const saveCard = async (card: CardItem): Promise<void> => {
 
 // Eliminar una tarjeta
 export const deleteCard = async (cardId: string): Promise<void> => {
-  const db = getDb();
-  if (db && isFirebaseConfigured()) {
-    const ref = doc(db, COLLECTION_NAME, cardId);
-    await deleteDoc(ref);
+  const ctx = await loadFirestore();
+  if (ctx) {
+    const { db, firestore } = ctx;
+    const ref = firestore.doc(db, COLLECTION_NAME, cardId);
+    await firestore.deleteDoc(ref);
   }
 
   const localBackup = localStorage.getItem('microit_cards_backup');
