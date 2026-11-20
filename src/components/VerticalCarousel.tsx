@@ -178,10 +178,10 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
               initial={
                 !hasCompletedStagger
                   ? {
-                      translateY: isTop ? -260 : isBottom ? 260 : 0,
-                      translateZ: -380,
-                      rotateX: isTop ? -32 : isBottom ? 32 : 0,
-                      scale: 0.65,
+                      translateY: isTop ? -200 : isBottom ? 200 : 0,
+                      translateZ: -320,
+                      rotateX: isTop ? -25 : isBottom ? 25 : 0,
+                      scale: 0.75,
                       width: compressedWidth,
                       maxWidth: '42rem',
                       borderRadius: '24px',
@@ -193,14 +193,14 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
               animate={
                 isActive
                   ? {
-                      // ACTIVE CARD: Arrives at center, then expands width side-to-side
+                      // ACTIVE CARD: Tarjeta central prominente contenida con escala elástica
                       translateY: 0,
                       translateZ: 60,
                       rotateX: 0,
-                      scale: 1,
-                      width: '100%',
-                      maxWidth: '100%',
-                      borderRadius: '0px',
+                      scale: 1.04,
+                      width: isMobile ? '92%' : '95%',
+                      maxWidth: '46rem',
+                      borderRadius: '24px',
                       opacity: 1,
                       zIndex: 20
                     }
@@ -280,8 +280,8 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                   handleNext();
                 }
               }}
-              className={`absolute h-[210px] sm:h-[250px] md:h-[280px] overflow-hidden cursor-pointer group shadow-2xl border ${
-                isActive ? 'border-y border-x-0 border-white/30' : 'border-white/20'
+              className={`absolute h-[210px] sm:h-[250px] md:h-[280px] overflow-hidden cursor-pointer group shadow-2xl rounded-3xl border ${
+                isActive ? 'border-white/35' : 'border-white/20'
               }`}
             >
               {/* Card Image */}

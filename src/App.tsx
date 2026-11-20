@@ -116,11 +116,9 @@ export default function App() {
       </motion.div>
 
       {/* Main View Container (MD3 App Container with Floating Panels) */}
-      <motion.main 
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: isBooting ? 0 : 1, scale: isBooting ? 0.96 : 1 }}
-        transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="app-container flex-1 relative overflow-hidden"
+      <main 
+        className="app-container flex-1 relative overflow-hidden transition-opacity duration-700"
+        style={{ opacity: isBooting ? 0 : 1 }}
       >
         
         {/* Panel 1: Dashboard / Carrusel 3D */}
@@ -159,12 +157,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Panel 2: Ajustes y Panel Inferior con entrada flotante */}
-        <motion.div
+        {/* Panel 2: Ajustes y Panel Inferior (Mantiene física y centrado nativo MD3) */}
+        <div
           id="panel2"
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: isBooting ? 80 : 0, opacity: isBooting ? 0 : 1 }}
-          transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
           className={`interactive-panel ${activeModule === 'bottomElement' ? 'expanded' : 'collapsed'}`}
           onClick={() => {
             if (activeModule !== 'bottomElement') setActiveModule('bottomElement');
@@ -206,8 +201,8 @@ export default function App() {
               </Suspense>
             )}
           </div>
-        </motion.div>
-      </motion.main>
+        </div>
+      </main>
 
       {/* Fullscreen Card Detail Modal */}
       {hasOpenedModal && (
