@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { motion } from 'motion/react';
 import { CARDS_DATA } from './data/cardsData';
 import { ActiveModule, CardItem } from './types';
 import { HeaderBar } from './components/HeaderBar';
 import { VerticalCarousel } from './components/VerticalCarousel';
+import { CyberQuantumBoot } from './components/CyberQuantumBoot';
 import { subscribeToCards } from './services/cardsService';
 
 const BottomElement = lazy(() =>
@@ -20,6 +22,7 @@ export default function App() {
   const [hasOpenedModal, setHasOpenedModal] = useState<boolean>(false);
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(4);
+  const [isBooting, setIsBooting] = useState<boolean>(true);
 
   const openFullscreenCard = useCallback((card: CardItem) => {
     setHasOpenedModal(true);
@@ -86,6 +89,14 @@ export default function App() {
 
   return (
     <div className="relative w-full h-screen h-[100dvh] max-h-[100dvh] flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
+      {/* Cyber Quantum Boot Cinemático Inicial */}
+      {isBooting && (
+        <CyberQuantumBoot 
+          onComplete={() => setIsBooting(false)} 
+          accentColor={activeCard.accentColor} 
+        />
+      )}
+
       {/* Background Ambient Glow relative to active card - High GPU Performance */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-40 transition-colors duration-700"
@@ -94,11 +105,23 @@ export default function App() {
         }}
       />
 
-      {/* Header Bar */}
-      <HeaderBar activeCard={activeCard} />
+      {/* Header Bar con entrada fluida */}
+      <motion.div
+        initial={{ y: -64, opacity: 0 }}
+        animate={{ y: isBooting ? -64 : 0, opacity: isBooting ? 0 : 1 }}
+        transition={{ duration: 0.65, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+        className="z-30 shrink-0"
+      >
+        <HeaderBar activeCard={activeCard} />
+      </motion.div>
 
       {/* Main View Container (MD3 App Container with Floating Panels) */}
-      <main className="app-container flex-1 relative overflow-hidden">
+      <motion.main 
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: isBooting ? 0 : 1, scale: isBooting ? 0.96 : 1 }}
+        transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="app-container flex-1 relative overflow-hidden"
+      >
         
         {/* Panel 1: Dashboard / Carrusel 3D */}
         <div
@@ -180,7 +203,7 @@ export default function App() {
             )}
           </div>
         </div>
-      </main>
+      </motion.main>
 
       {/* Fullscreen Card Detail Modal */}
       {hasOpenedModal && (
