@@ -6,6 +6,7 @@ import { HeaderBar } from './components/HeaderBar';
 import { VerticalCarousel } from './components/VerticalCarousel';
 import { CyberQuantumBoot } from './components/CyberQuantumBoot';
 import { subscribeToCards } from './services/cardsService';
+import { setupMidnightFaviconSync } from './utils/dynamicFavicon';
 
 const BottomElement = lazy(() =>
   import('./components/BottomElement').then((m) => ({ default: m.BottomElement }))
@@ -27,6 +28,12 @@ export default function App() {
   const openFullscreenCard = useCallback((card: CardItem) => {
     setHasOpenedModal(true);
     setFullscreenCard(card);
+  }, []);
+
+  // Sincronización automática del favicon por día de la semana (costo CPU 0%)
+  useEffect(() => {
+    const cleanup = setupMidnightFaviconSync();
+    return cleanup;
   }, []);
 
   // Suscripción reactiva en tiempo real a Firestore (o respaldo local)

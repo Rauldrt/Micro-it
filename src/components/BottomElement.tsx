@@ -16,6 +16,7 @@ import {
   Database
 } from 'lucide-react';
 import { MicroLogo, LogoVariant } from './MicroLogo';
+import { WEEKDAY_FAVICON_CONFIGS, applyDynamicFavicon } from '../utils/dynamicFavicon';
 
 const AdminCardsPanel = lazy(() =>
   import('./AdminCardsPanel').then((m) => ({ default: m.AdminCardsPanel }))
@@ -380,6 +381,69 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                       Línea pura sin rellenos densos, perfecta para señalética y favicons ligeros.
                     </p>
                   </div>
+                </div>
+              </div>
+
+              {/* Selector & Showcase del Favicon Semanal Dinámico */}
+              <div className="mt-6 pt-6 border-t border-white/10 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-pink-400" />
+                      <span>Favicon Dinámico Semanal en la Pestaña</span>
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Cambia automáticamente de color cada día (y los viernes adopta el ícono de Rayo ⚡). Haz clic para probar:
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 self-start sm:self-auto">
+                    Hoy: {WEEKDAY_FAVICON_CONFIGS[new Date().getDay()].dayName} ({WEEKDAY_FAVICON_CONFIGS[new Date().getDay()].themeName})
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 pt-1">
+                  {Object.entries(WEEKDAY_FAVICON_CONFIGS).map(([key, cfg]) => {
+                    const dayIdx = Number(key);
+                    const isToday = new Date().getDay() === dayIdx;
+                    return (
+                      <button
+                        key={dayIdx}
+                        onClick={() => applyDynamicFavicon(dayIdx)}
+                        className={`relative p-3 rounded-xl border flex flex-col items-center text-center gap-2 transition-all duration-300 cursor-pointer active:scale-95 ${
+                          isToday 
+                            ? 'bg-white/15 border-white/40 shadow-lg' 
+                            : 'bg-white/5 border-white/10 hover:border-white/25 hover:bg-white/10'
+                        }`}
+                        title={`Haz clic para probar en tu pestaña: ${cfg.dayName} (${cfg.themeName})`}
+                      >
+                        {isToday && (
+                          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Día actual" />
+                        )}
+                        
+                        {/* Vista previa vectorial del ícono del día */}
+                        <div className="w-8 h-8 flex items-center justify-center">
+                          <svg viewBox="-14 -12 128 124" className="w-full h-full">
+                            <defs>
+                              <filter id={`previewGlow-${dayIdx}`} x="-60%" y="-60%" width="220%" height="220%">
+                                <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor={cfg.neonWide} floodOpacity="0.95" />
+                                <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor={cfg.neonMid} floodOpacity="1" />
+                              </filter>
+                            </defs>
+                            <path d={cfg.path} fill="#000000" filter={`url(#previewGlow-${dayIdx})`} />
+                          </svg>
+                        </div>
+
+                        <div>
+                          <div className={`text-[11px] font-bold ${isToday ? 'text-white' : 'text-slate-300'}`}>
+                            {cfg.dayName}
+                          </div>
+                          <div className="text-[9px] text-slate-400 font-mono">
+                            {cfg.isSpecialShape ? '⚡ Rayo' : 'µ Glifo'}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>
