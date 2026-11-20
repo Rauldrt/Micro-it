@@ -386,11 +386,44 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                   </div>
 
                   {isActive && (
-                    <div className="hidden sm:flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2 z-20">
                       {card.specs.slice(0, screenTier === 'wide' ? 4 : screenTier === 'desktop' ? 3 : 2).map((s, specIdx) => (
-                        <div key={specIdx} className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/10 text-right">
-                          <div className="text-[10px] text-slate-400 uppercase font-mono">{s.label}</div>
-                          <div className="text-xs font-bold text-white">{s.value}</div>
+                        <div
+                          key={specIdx}
+                          className="group/pill relative px-3.5 py-2 rounded-xl bg-slate-950/85 border border-white/10 text-right transition-all duration-300 ease-out hover:-translate-y-1.5 hover:scale-105 active:scale-95 hover:border-white/30 hover:bg-slate-900/95 shadow-md hover:shadow-2xl overflow-hidden cursor-pointer backdrop-blur-sm select-none"
+                          style={{
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = `0 10px 25px -4px ${card.accentColor}50, 0 0 15px -2px ${card.accentColor}35`;
+                            e.currentTarget.style.borderColor = `${card.accentColor}80`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.4)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                          }}
+                          title={`${s.label}: ${s.value}`}
+                        >
+                          {/* Destello de luz superior en hover con el color de la tarjeta */}
+                          <div 
+                            className="absolute top-0 inset-x-0 h-[2px] opacity-0 group-hover/pill:opacity-100 transition-opacity duration-300"
+                            style={{ backgroundColor: card.accentColor }}
+                          />
+
+                          {/* Reflejo sutil de cristal reactivo en hover */}
+                          <div 
+                            className="absolute inset-0 opacity-0 group-hover/pill:opacity-100 transition-opacity duration-300 pointer-events-none"
+                            style={{
+                              background: `linear-gradient(135deg, ${card.accentColor}20 0%, transparent 65%)`
+                            }}
+                          />
+
+                          <div className="relative z-10 text-[10px] text-slate-400 group-hover/pill:text-slate-200 uppercase font-mono font-medium transition-colors duration-200">
+                            {s.label}
+                          </div>
+                          <div className="relative z-10 text-xs font-bold text-white tracking-wide transition-all duration-200 group-hover/pill:text-white group-hover/pill:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                            {s.value}
+                          </div>
                         </div>
                       ))}
                     </div>
