@@ -31,10 +31,25 @@ export default function App() {
 
   // Suscripción reactiva en tiempo real a Firestore (o respaldo local)
   useEffect(() => {
+    // Pre-cargar imágenes iniciales para caché inmediata en segundo plano
+    CARDS_DATA.forEach((card) => {
+      if (card.imageUrl) {
+        const img = new Image();
+        img.src = card.imageUrl;
+      }
+    });
+
     const unsubscribe = subscribeToCards((updatedCards) => {
       if (updatedCards && updatedCards.length > 0) {
         setCards(updatedCards);
         setCurrentIndex((prev) => (prev >= updatedCards.length ? 0 : prev));
+        // Pre-cargar imágenes actualizadas en caché
+        updatedCards.forEach((c) => {
+          if (c.imageUrl) {
+            const img = new Image();
+            img.src = c.imageUrl;
+          }
+        });
       }
     });
 
