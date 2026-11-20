@@ -11,6 +11,7 @@ interface VerticalCarouselProps {
   onOpenCardDetails: (card: CardItem) => void;
   isExpanded: boolean;
   onCompress: () => void;
+  isBooting?: boolean;
 }
 
 export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
@@ -18,11 +19,23 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
   currentIndex,
   onSelectIndex,
   onOpenCardDetails,
-  isExpanded
+  isExpanded,
+  isBooting = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const total = cards.length;
   const [isDragging, setIsDragging] = useState(false);
+  const [hasCompletedStagger, setHasCompletedStagger] = useState(false);
+
+  // Coreografía espacial inicial: activa el abanico 3D al finalizar el boot
+  useEffect(() => {
+    if (!isBooting && !hasCompletedStagger) {
+      const timer = setTimeout(() => {
+        setHasCompletedStagger(true);
+      }, 1100);
+      return () => clearTimeout(timer);
+    }
+  }, [isBooting, hasCompletedStagger]);
 
   // Responsive screen size check for small screen transition tuning
   const [isMobile, setIsMobile] = useState<boolean>(() =>
@@ -162,7 +175,21 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                     : '0 20px 50px -10px rgba(0,0,0,0.8)'
                   : '0 8px 24px -8px rgba(0,0,0,0.5)'
               }}
-              initial={false}
+              initial={
+                !hasCompletedStagger
+                  ? {
+                      translateY: isTop ? -260 : isBottom ? 260 : 0,
+                      translateZ: -380,
+                      rotateX: isTop ? -32 : isBottom ? 32 : 0,
+                      scale: 0.65,
+                      width: compressedWidth,
+                      maxWidth: '42rem',
+                      borderRadius: '24px',
+                      opacity: 0,
+                      zIndex: isActive ? 20 : 10
+                    }
+                  : false
+              }
               animate={
                 isActive
                   ? {
@@ -222,6 +249,10 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                 stiffness: 220,
                 damping: 26,
                 mass: 1,
+                // Coreografía espacial inicial escalonada (Choreographed Spatial Stagger)
+                delay: !hasCompletedStagger
+                  ? (isActive ? 0.08 : isTop ? 0.20 : isBottom ? 0.28 : 0.38)
+                  : 0,
                 // Sequential width expansion with smooth ease-out curve
                 width: {
                   duration: isMobile ? 0.65 : 0.5,

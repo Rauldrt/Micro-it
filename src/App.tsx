@@ -154,13 +154,17 @@ export default function App() {
               onOpenCardDetails={openFullscreenCard}
               isExpanded={activeModule === 'carousel'}
               onCompress={() => setActiveModule('bottomElement')}
+              isBooting={isBooting}
             />
           </div>
         </div>
 
-        {/* Panel 2: Ajustes y Panel Inferior */}
-        <div
+        {/* Panel 2: Ajustes y Panel Inferior con entrada flotante */}
+        <motion.div
           id="panel2"
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: isBooting ? 80 : 0, opacity: isBooting ? 0 : 1 }}
+          transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
           className={`interactive-panel ${activeModule === 'bottomElement' ? 'expanded' : 'collapsed'}`}
           onClick={() => {
             if (activeModule !== 'bottomElement') setActiveModule('bottomElement');
@@ -202,7 +206,7 @@ export default function App() {
               </Suspense>
             )}
           </div>
-        </div>
+        </motion.div>
       </motion.main>
 
       {/* Fullscreen Card Detail Modal */}
