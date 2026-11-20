@@ -37,18 +37,30 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
     }
   }, [isBooting, hasCompletedStagger]);
 
-  // Responsive screen size check for small screen transition tuning
-  const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
-  );
+  // Responsive screen size tier check for adaptive widescreen scaling
+  const [screenTier, setScreenTier] = useState<'mobile' | 'tablet' | 'desktop' | 'wide'>(() => {
+    if (typeof window === 'undefined') return 'desktop';
+    const w = window.innerWidth;
+    if (w < 768) return 'mobile';
+    if (w < 1024) return 'tablet';
+    if (w < 1536) return 'desktop';
+    return 'wide';
+  });
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    setIsMobile(mq.matches);
-    mq.addEventListener('change', handleChange);
-    return () => mq.removeEventListener('change', handleChange);
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w < 768) setScreenTier('mobile');
+      else if (w < 1024) setScreenTier('tablet');
+      else if (w < 1536) setScreenTier('desktop');
+      else setScreenTier('wide');
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const isMobile = screenTier === 'mobile';
 
   // Helper to get relative offset (-3 to +3) with circular wrap
   const getOffset = (cardIndex: number) => {
@@ -103,7 +115,31 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
 
   if (!isExpanded) return null;
 
-  const compressedWidth = isMobile ? '80%' : '85%';
+  // Proporciones de ancho según tier de pantalla (Mobile, Tablet, Desktop, Wide)
+  const activeWidth = 
+    screenTier === 'mobile' ? '92%' : 
+    screenTier === 'tablet' ? '92%' : 
+    screenTier === 'desktop' ? '90%' : '88%';
+
+  const activeMaxWidth = 
+    screenTier === 'mobile' ? '28rem' : 
+    screenTier === 'tablet' ? '48rem' : 
+    screenTier === 'desktop' ? '68rem' : '76rem';
+
+  const compressedWidth = 
+    screenTier === 'mobile' ? '82%' : 
+    screenTier === 'tablet' ? '85%' : 
+    screenTier === 'desktop' ? '82%' : '80%';
+
+  const compressedMaxWidth = 
+    screenTier === 'mobile' ? '26rem' : 
+    screenTier === 'tablet' ? '44rem' : 
+    screenTier === 'desktop' ? '60rem' : '68rem';
+
+  const farMaxWidth = 
+    screenTier === 'mobile' ? '24rem' : 
+    screenTier === 'tablet' ? '38rem' : 
+    screenTier === 'desktop' ? '52rem' : '60rem';
 
   return (
     <motion.div
@@ -140,7 +176,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
       </div>
 
       {/* 3D Elastic Cards Stack */}
-      <div className="relative w-full h-[480px] sm:h-[520px] md:h-[560px] flex items-center justify-center">
+      <div className="relative w-full h-[480px] sm:h-[520px] md:h-[560px] lg:h-[580px] xl:h-[600px] flex items-center justify-center">
         {cards.map((card, idx) => {
           const offset = getOffset(idx);
           if (Math.abs(offset) > 2) return null;
@@ -183,7 +219,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                       rotateX: isTop ? -25 : isBottom ? 25 : 0,
                       scale: 0.75,
                       width: compressedWidth,
-                      maxWidth: '42rem',
+                      maxWidth: compressedMaxWidth,
                       borderRadius: '24px',
                       opacity: 0,
                       zIndex: isActive ? 20 : 10
@@ -193,39 +229,39 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
               animate={
                 isActive
                   ? {
-                      // ACTIVE CARD: Tarjeta central prominente contenida con escala elástica
+                      // ACTIVE CARD: Tarjeta central prominente con ancho expansivo adaptativo
                       translateY: 0,
                       translateZ: 60,
                       rotateX: 0,
                       scale: 1.04,
-                      width: isMobile ? '92%' : '95%',
-                      maxWidth: '46rem',
+                      width: activeWidth,
+                      maxWidth: activeMaxWidth,
                       borderRadius: '24px',
                       opacity: 1,
                       zIndex: 20
                     }
                   : isTop
                   ? {
-                      // TOP CARD: Compressed width, tilted backward at top
+                      // TOP CARD: Ancho comprimido, inclinada hacia atrás superior
                       translateY: isMobile ? -145 : -160,
                       translateZ: -60,
                       rotateX: -16,
                       scale: 0.86,
                       width: compressedWidth,
-                      maxWidth: '42rem',
+                      maxWidth: compressedMaxWidth,
                       borderRadius: '24px',
                       opacity: 0.7,
                       zIndex: 10
                     }
                   : isBottom
                   ? {
-                      // BOTTOM CARD: Compressed width, tilted backward at bottom
+                      // BOTTOM CARD: Ancho comprimido, inclinada hacia atrás inferior
                       translateY: isMobile ? 145 : 160,
                       translateZ: -60,
                       rotateX: 16,
                       scale: 0.86,
                       width: compressedWidth,
-                      maxWidth: '42rem',
+                      maxWidth: compressedMaxWidth,
                       borderRadius: '24px',
                       opacity: 0.7,
                       zIndex: 10
@@ -237,7 +273,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                       rotateX: offset < 0 ? -30 : 30,
                       scale: 0.7,
                       width: '75%',
-                      maxWidth: '36rem',
+                      maxWidth: farMaxWidth,
                       borderRadius: '24px',
                       opacity: 0,
                       zIndex: 0
@@ -280,7 +316,7 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                   handleNext();
                 }
               }}
-              className={`absolute h-[210px] sm:h-[250px] md:h-[280px] overflow-hidden cursor-pointer group shadow-2xl rounded-3xl border ${
+              className={`absolute h-[210px] sm:h-[250px] md:h-[280px] lg:h-[300px] xl:h-[320px] overflow-hidden cursor-pointer group shadow-2xl rounded-3xl border ${
                 isActive ? 'border-white/35' : 'border-white/20'
               }`}
             >
@@ -344,14 +380,14 @@ export const VerticalCarousel: React.FC<VerticalCarouselProps> = ({
                         {card.title}
                       </h3>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-300 font-light line-clamp-1 max-w-xl">
+                    <p className="text-xs sm:text-sm text-slate-300 font-light line-clamp-1 max-w-xl lg:max-w-2xl xl:max-w-3xl">
                       {card.subtitle} — {card.description}
                     </p>
                   </div>
 
                   {isActive && (
                     <div className="hidden sm:flex items-center gap-2">
-                      {card.specs.slice(0, 2).map((s, specIdx) => (
+                      {card.specs.slice(0, screenTier === 'wide' ? 4 : screenTier === 'desktop' ? 3 : 2).map((s, specIdx) => (
                         <div key={specIdx} className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/10 text-right">
                           <div className="text-[10px] text-slate-400 uppercase font-mono">{s.label}</div>
                           <div className="text-xs font-bold text-white">{s.value}</div>
