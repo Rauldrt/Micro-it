@@ -389,14 +389,14 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-pink-400" />
-                      <span>Favicon Dinámico Semanal en la Pestaña</span>
+                      <Sparkles className="w-4 h-4 text-sky-400" />
+                      <span>Sombra Neón Semanal del Ícono µ en la Pestaña</span>
                     </h4>
                     <p className="text-xs text-slate-400">
-                      Cambia automáticamente de color cada día (y los viernes adopta el ícono de Rayo ⚡). Haz clic para probar:
+                      El símbolo µ oficial conserva su cuerpo negro con borde blanco perimetral, variando dinámicamente el resplandor neón según el día de la semana. Haz clic para probar:
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 self-start sm:self-auto">
+                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 self-start sm:self-auto">
                     Hoy: {WEEKDAY_FAVICON_CONFIGS[new Date().getDay()].dayName} ({WEEKDAY_FAVICON_CONFIGS[new Date().getDay()].themeName})
                   </span>
                 </div>
@@ -420,7 +420,7 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Día actual" />
                         )}
                         
-                        {/* Vista previa vectorial del ícono del día */}
+                        {/* Vista previa vectorial del glifo µ con borde blanco y sombra neón del día */}
                         <div className="w-8 h-8 flex items-center justify-center">
                           <svg viewBox="-14 -12 128 124" className="w-full h-full">
                             <defs>
@@ -429,7 +429,14 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                                 <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor={cfg.neonMid} floodOpacity="1" />
                               </filter>
                             </defs>
-                            <path d={cfg.path} fill="#000000" filter={`url(#previewGlow-${dayIdx})`} />
+                            <path 
+                              d={MU_FLAT_PATH} 
+                              fill="#000000" 
+                              stroke="#ffffff" 
+                              strokeWidth="3" 
+                              strokeLinejoin="miter" 
+                              filter={`url(#previewGlow-${dayIdx})`} 
+                            />
                           </svg>
                         </div>
 
@@ -438,7 +445,7 @@ export const BottomElement: React.FC<BottomElementProps> = ({
                             {cfg.dayName}
                           </div>
                           <div className="text-[9px] text-slate-400 font-mono">
-                            {cfg.isSpecialShape ? '⚡ Rayo' : 'µ Glifo'}
+                            {cfg.themeName.split(' ')[0]}
                           </div>
                         </div>
                       </button>
