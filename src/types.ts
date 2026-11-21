@@ -19,6 +19,7 @@ export interface CardItem {
   }[];
   longDescription: string;
   tags: string[];
+  hasDownload?: boolean; // Habilita o deshabilita la estación de descargas
   version?: string;
   downloadUrl?: string;
   fileSize?: string;

@@ -6,6 +6,7 @@ import { LazyImage } from './LazyImage';
 import { MicroLogo } from './MicroLogo';
 import { FormattedDescription } from './FormattedDescription';
 import { CyberDownloadStation } from './CyberDownloadStation';
+import { StudioBentoGallery } from './StudioBentoGallery';
 
 interface FullscreenCardModalProps {
   card: CardItem | null;
@@ -259,19 +260,21 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
               </div>
             </div>
 
-            {/* Acciones de cabecera: Descarga Rápida y Salir */}
+            {/* Acciones de cabecera: Descarga Rápida (solo si la tarjeta tiene descarga activa) y Salir */}
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={scrollToDownload}
-                className="pointer-events-auto px-3.5 py-1.5 rounded-full text-xs font-black text-slate-950 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
-                style={{ backgroundColor: card.accentColor }}
-                title="Descargar Instalador Oficial"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Descargar App</span>
-                <span className="sm:hidden">Descargar</span>
-              </button>
+              {card.hasDownload && (
+                <button
+                  type="button"
+                  onClick={scrollToDownload}
+                  className="pointer-events-auto px-3.5 py-1.5 rounded-full text-xs font-black text-slate-950 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  style={{ backgroundColor: card.accentColor }}
+                  title="Descargar Instalador Oficial"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Descargar App</span>
+                  <span className="sm:hidden">Descargar</span>
+                </button>
+              )}
 
               {/* Margen derecho reservado alineado con el botón Salir */}
               <div className="w-20 shrink-0 pointer-events-none" />
@@ -490,22 +493,42 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 </div>
               </div>
 
-              {/* Estación de Descarga Holográfica Interactiva */}
-              <div ref={downloadSectionRef}>
-                <CyberDownloadStation card={card} />
-              </div>
+              {/* Galería Bento Tiles (Geometría RonDesignLab y Movimientos Líquidos Material Design 3) */}
+              {card.id === 'card-1' && (
+                <StudioBentoGallery accentColor={card.accentColor} />
+              )}
+
+              {/* Estación de Descarga Holográfica Interactiva (Solo para soluciones con descarga activa) */}
+              {card.hasDownload && (
+                <div ref={downloadSectionRef}>
+                  <CyberDownloadStation card={card} />
+                </div>
+              )}
 
               {/* Action Bar */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/10 pb-16">
                 <div className="flex items-center gap-3">
-                  <button 
-                    onClick={scrollToDownload}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-slate-950 transition-all hover:brightness-110 active:scale-95 shadow-xl cursor-pointer"
-                    style={{ backgroundColor: card.accentColor }}
-                  >
-                    <Download className="w-4 h-4 animate-bounce" />
-                    <span>Descargar Instalador</span>
-                  </button>
+                  {card.hasDownload ? (
+                    <button 
+                      onClick={scrollToDownload}
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-slate-950 transition-all hover:brightness-110 active:scale-95 shadow-xl cursor-pointer"
+                      style={{ backgroundColor: card.accentColor }}
+                    >
+                      <Download className="w-4 h-4 animate-bounce" />
+                      <span>Descargar Instalador</span>
+                    </button>
+                  ) : (
+                    <a 
+                      href="https://wa.me/5493757436894?text=Hola%20Micro-it%2C%20quiero%20consultar%20por%20un%20proyecto%20de%20software%20a%20medida."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-slate-950 transition-all hover:brightness-110 active:scale-95 shadow-xl cursor-pointer"
+                      style={{ backgroundColor: card.accentColor }}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Solicitar Asesoramiento & Cotización</span>
+                    </a>
+                  )}
 
                   <button className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer" title="Guardar">
                     <Bookmark className="w-4 h-4" />

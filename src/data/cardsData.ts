@@ -21,7 +21,8 @@ export const CARDS_DATA: CardItem[] = [
       { label: 'Soporte', value: 'Continuo Local' }
     ],
     longDescription: 'En Micro-it unificamos la ingeniería de software con la creación de marca. Diseñamos identidades visuales atractivas y desarrollamos sistemas a medida (PWAs, paneles administrativos y aplicaciones móviles) optimizados para el flujo operativo real de tu comercio o empresa.',
-    tags: ['Desarrollo Web', 'Branding', 'UI/UX', 'Software a Medida']
+    tags: ['Desarrollo Web', 'Branding', 'UI/UX', 'Software a Medida'],
+    hasDownload: false
   },
   {
     id: 'card-2',
@@ -43,7 +44,8 @@ export const CARDS_DATA: CardItem[] = [
       { label: 'Modo', value: 'SaaS Multi-caja' }
     ],
     longDescription: 'Sistema integral de punto de venta multiplataforma. Emite tickets y facturas electrónicas con CAE oficial en segundos, lee códigos de barra con la cámara del dispositivo o lector físico, genera reportes de caja en tiempo real y sincroniza inventario multi-sucursal en la nube.',
-    tags: ['Punto de Venta', 'AFIP ARCA', 'Facturación', 'Android APK']
+    tags: ['Punto de Venta', 'AFIP ARCA', 'Facturación', 'Android APK'],
+    hasDownload: false
   },
   {
     id: 'card-3',
@@ -66,6 +68,7 @@ export const CARDS_DATA: CardItem[] = [
     ],
     longDescription: 'Plataforma de escritorio para comunicación masiva por WhatsApp. Carga contactos desde CSV, personaliza mensajes con variables dinámicas ({nombre}), guarda plantillas recurrentes y protege tu línea comercial con pausas inteligentes programadas.',
     tags: ['WhatsApp Marketing', 'Automatización', 'B2B', 'Desktop App'],
+    hasDownload: true,
     version: '1.2.0',
     downloadUrl: 'https://github.com/Rauldrt/whatsapp-sender-releases/releases/download/v1.2.0/WhatsApp-Sender-Pro-Setup-1.2.0.exe',
     fileSize: '310.4 MB'
@@ -90,7 +93,8 @@ export const CARDS_DATA: CardItem[] = [
       { label: 'Dispositivos', value: 'Móvil & PC' }
     ],
     longDescription: 'Progressive Web App autónoma para crear e imprimir etiquetas de productos y códigos de barras en tiras térmicas continuas. Funciona sin internet ni bases de datos externas, se conecta directamente a impresoras térmicas Bluetooth o cableadas y permite ajustes milimétricos en vivo.',
-    tags: ['Código de Barras', 'Impresora Térmica', 'Bluetooth SPP', 'PWA']
+    tags: ['Código de Barras', 'Impresora Térmica', 'Bluetooth SPP', 'PWA'],
+    hasDownload: false
   },
   {
     id: 'card-5',
@@ -112,7 +116,8 @@ export const CARDS_DATA: CardItem[] = [
       { label: 'Integración', value: 'WhatsApp Web' }
     ],
     longDescription: 'Herramienta de productividad impulsada por Inteligencia Artificial multimodal. Convierte audios largos de clientes en resúmenes ejecutivos accionables y permite responder redactando texto que luego es emitido con una voz sintetizada natural.',
-    tags: ['Gemini AI', 'Transcripción', 'Notas de Voz', 'Extensión']
+    tags: ['Gemini AI', 'Transcripción', 'Notas de Voz', 'Extensión'],
+    hasDownload: false
   },
   {
     id: 'card-6',
@@ -134,6 +139,7 @@ export const CARDS_DATA: CardItem[] = [
       { label: 'Garantía', value: 'Soporte Directo' }
     ],
     longDescription: 'Acompañamos a tu empresa en la instalación y puesta en marcha física de su equipamiento informático. Configuramos impresión automática de comprobantes desde Drive, enlaces con balanzas de peso, sistemas de reparto y optimización de redes locales.',
-    tags: ['Hardware', 'Impresión Drive', 'Logística', 'Soporte']
+    tags: ['Hardware', 'Impresión Drive', 'Logística', 'Soporte'],
+    hasDownload: false
   }
 ];

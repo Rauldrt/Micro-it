@@ -25,7 +25,8 @@ import {
   UserCheck,
   Upload,
   Film,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 import { uploadSolutionMedia, VideoProcessingProgress } from '../services/mediaUploadService';
 
@@ -178,6 +179,7 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
       description: 'Breve descripción de la solución.',
       longDescription: 'Descripción extendida y propuesta de valor completa para esta solución tecnológica creada por Micro-it.',
       tags: ['TypeScript', 'Cloud', 'Micro-it'],
+      hasDownload: false,
       specs: [
         { label: 'Modalidad', value: '100% a Medida' },
         { label: 'Plataformas', value: 'Web & Móvil' }
@@ -610,30 +612,55 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
             />
           </div>
 
-          {/* Versión de la Aplicación y Enlace de Descarga Directa */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs p-3.5 rounded-2xl bg-white/5 border border-white/10">
-            <div>
-              <label className="text-slate-300 font-bold block mb-1">Versión Actual de la App</label>
-              <input 
-                type="text" 
-                value={editingCard.version || ''} 
-                onChange={(e) => setEditingCard({ ...editingCard, version: e.target.value })} 
-                placeholder="Ej: 1.1.0"
-                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
-              />
-              <span className="text-[10px] text-slate-400">Determina el nombre y número oficial de versión descargado</span>
+          {/* Módulo de Descargas: Switch de Activación y Configuración */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-bold text-white flex items-center gap-2">
+                  <Download className="w-4 h-4 text-sky-400" />
+                  <span>Estación de Descarga Oficial (.exe / App)</span>
+                </label>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Activa o desactiva la estación de descarga en el modal de detalle (desactívala para tarjetas informativas o de servicios).
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={editingCard.hasDownload || false} 
+                  onChange={(e) => setEditingCard({ ...editingCard, hasDownload: e.target.checked })} 
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
+              </label>
             </div>
-            <div>
-              <label className="text-slate-300 font-bold block mb-1">Enlace de Descarga (CDN / GitHub / Storage)</label>
-              <input 
-                type="text" 
-                value={editingCard.downloadUrl || ''} 
-                onChange={(e) => setEditingCard({ ...editingCard, downloadUrl: e.target.value })} 
-                placeholder="https://github.com/.../releases o URL directa"
-                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
-              />
-              <span className="text-[10px] text-slate-400">Si es GitHub Releases, consulta y descarga el último .exe automáticamente</span>
-            </div>
+
+            {editingCard.hasDownload && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-3 border-t border-white/10">
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Versión Actual de la App</label>
+                  <input 
+                    type="text" 
+                    value={editingCard.version || ''} 
+                    onChange={(e) => setEditingCard({ ...editingCard, version: e.target.value })} 
+                    placeholder="Ej: 1.2.0"
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-slate-400">Determina el nombre y número oficial de versión descargado</span>
+                </div>
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Enlace de Descarga (CDN / GitHub / Storage)</label>
+                  <input 
+                    type="text" 
+                    value={editingCard.downloadUrl || ''} 
+                    onChange={(e) => setEditingCard({ ...editingCard, downloadUrl: e.target.value })} 
+                    placeholder="https://github.com/.../releases o URL directa"
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-slate-400">Si es GitHub Releases, consulta y descarga el último .exe automáticamente</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="text-xs">
@@ -702,6 +729,16 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 shrink-0">
                       {card.category}
                     </span>
+                    {card.hasDownload ? (
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                        <Download className="w-2.5 h-2.5" />
+                        <span>Descarga</span>
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-white/5 shrink-0">
+                        Informativo
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-slate-400 truncate max-w-lg">{card.subtitle}</p>
                 </div>
