@@ -11,7 +11,15 @@ const getLocalCardsFallback = (): CardItem[] => {
     try {
       const parsed = JSON.parse(savedLocal);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((card: CardItem) => {
+          const fallback = CARDS_DATA.find((c) => c.id === card.id || c.number === card.number);
+          return {
+            ...fallback,
+            ...card,
+            hasDownload: card.hasDownload !== undefined ? card.hasDownload : (fallback?.hasDownload ?? false),
+            gallery: (card.gallery && Array.isArray(card.gallery) && card.gallery.length > 0) ? card.gallery : (fallback?.gallery || [])
+          };
+        });
       }
     } catch (e) {
       console.error('Error parseando backup local:', e);
@@ -65,7 +73,13 @@ export const subscribeToCards = (
             snapshot.forEach((docSnap) => {
               const data = docSnap.data();
               const fallback = CARDS_DATA.find((c) => c.id === docSnap.id || c.number === data.number);
-              cards.push({ ...fallback, ...data, id: docSnap.id } as CardItem);
+              cards.push({
+                ...fallback,
+                ...data,
+                id: docSnap.id,
+                hasDownload: data.hasDownload !== undefined ? data.hasDownload : (fallback?.hasDownload ?? false),
+                gallery: (data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0) ? data.gallery : (fallback?.gallery || [])
+              } as CardItem);
             });
             cards.sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
             localStorage.setItem('microit_cards_backup', JSON.stringify(cards));

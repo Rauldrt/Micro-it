@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CardItem } from '../types';
+import { CardItem, GalleryImageItem } from '../types';
 import { saveCard, deleteCard, seedInitialCards } from '../services/cardsService';
 import { isFirebaseConfigured, getFirebaseConfig } from '../lib/firebase';
 import { getFirebaseAuth } from '../lib/firebaseAdmin';
@@ -26,9 +26,13 @@ import {
   Upload,
   Film,
   Loader2,
-  Download
+  Download,
+  Image as ImageIcon,
+  ArrowUp,
+  ArrowDown,
+  LayoutGrid
 } from 'lucide-react';
-import { uploadSolutionMedia, VideoProcessingProgress } from '../services/mediaUploadService';
+import { uploadSolutionMedia, uploadGalleryImageFile, VideoProcessingProgress } from '../services/mediaUploadService';
 
 interface AdminCardsPanelProps {
   cards: CardItem[];
@@ -55,6 +59,14 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
   // Estado para el proceso de subida y optimización de video
   const [uploadProgress, setUploadProgress] = useState<VideoProcessingProgress | null>(null);
   const [isUploadingMedia, setIsUploadingMedia] = useState<boolean>(false);
+
+  // Estados para la administración de la Galería Bento Tiles
+  const [newGalUrl, setNewGalUrl] = useState('');
+  const [newGalTitle, setNewGalTitle] = useState('');
+  const [newGalCategory, setNewGalCategory] = useState('');
+  const [newGalSubtitle, setNewGalSubtitle] = useState('');
+  const [newGalSize, setNewGalSize] = useState<GalleryImageItem['size']>('square');
+  const [isUploadingGalImage, setIsUploadingGalImage] = useState(false);
 
   const handleVideoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,6 +111,95 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
       setIsUploadingMedia(false);
       setTimeout(() => setUploadProgress(null), 4000);
       // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const handleAddGalleryItem = () => {
+    if (!editingCard) return;
+    if (!newGalUrl.trim()) {
+      alert('Por favor ingresa la URL de la imagen o súbela desde tu equipo.');
+      return;
+    }
+    if (!newGalTitle.trim()) {
+      alert('Por favor ingresa un título descriptivo para la imagen.');
+      return;
+    }
+
+    const newItem: GalleryImageItem = {
+      id: `gal-${Date.now()}`,
+      url: newGalUrl.trim(),
+      title: newGalTitle.trim(),
+      category: newGalCategory.trim() || editingCard.category || 'Proyecto',
+      subtitle: newGalSubtitle.trim() || undefined,
+      size: newGalSize
+    };
+
+    setEditingCard({
+      ...editingCard,
+      gallery: [...(editingCard.gallery || []), newItem]
+    });
+
+    // Reset inputs
+    setNewGalUrl('');
+    setNewGalTitle('');
+    setNewGalCategory('');
+    setNewGalSubtitle('');
+    setNewGalSize('square');
+  };
+
+  const handleRemoveGalleryItem = (id: string) => {
+    if (!editingCard) return;
+    setEditingCard({
+      ...editingCard,
+      gallery: (editingCard.gallery || []).filter((item) => item.id !== id)
+    });
+  };
+
+  const handleUpdateGalleryItemSize = (id: string, size: GalleryImageItem['size']) => {
+    if (!editingCard) return;
+    setEditingCard({
+      ...editingCard,
+      gallery: (editingCard.gallery || []).map((item) =>
+        item.id === id ? { ...item, size } : item
+      )
+    });
+  };
+
+  const handleMoveGalleryItem = (index: number, direction: 'up' | 'down') => {
+    if (!editingCard || !editingCard.gallery) return;
+    const items = [...editingCard.gallery];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const temp = items[index];
+    items[index] = items[targetIndex];
+    items[targetIndex] = temp;
+    setEditingCard({
+      ...editingCard,
+      gallery: items
+    });
+  };
+
+  const handleGalleryImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingCard) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor selecciona un archivo de imagen válido (JPG, PNG, WebP).');
+      return;
+    }
+
+    setIsUploadingGalImage(true);
+    try {
+      const url = await uploadGalleryImageFile(editingCard.id, file);
+      setNewGalUrl(url);
+      if (!newGalTitle) {
+        setNewGalTitle(file.name.replace(/\.[^/.]+$/, ''));
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error al subir imagen a Firebase Storage: ${err.message || err}`);
+    } finally {
+      setIsUploadingGalImage(false);
       e.target.value = '';
     }
   };
@@ -661,6 +762,214 @@ export const AdminCardsPanel: React.FC<AdminCardsPanelProps> = ({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* =======================================================================
+              MÓDULO DE GALERÍA BENTO TILES (WINDOWS STYLE): Administrable desde Ajustes
+              ======================================================================= */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div>
+                <label className="text-xs font-bold text-white flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-sky-400" />
+                  <span>Galería de Imágenes (Bento Tiles de Windows)</span>
+                </label>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Gestiona las imágenes de proyectos en formato Bento Grid. Puedes elegir el tamaño asimétrico de cada tile ('Grande', 'Vertical', 'Cuadrado').
+                </p>
+              </div>
+              <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold">
+                {editingCard.gallery?.length || 0} items
+              </span>
+            </div>
+
+            {/* Lista de Imágenes Actuales en la Galería */}
+            {editingCard.gallery && editingCard.gallery.length > 0 ? (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {editingCard.gallery.map((item, idx) => (
+                  <div 
+                    key={item.id || idx}
+                    className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img 
+                        src={item.url} 
+                        alt={item.title} 
+                        className="w-12 h-12 rounded-lg object-cover shrink-0 border border-white/15 bg-slate-900"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h6 className="font-bold text-white truncate text-xs">{item.title}</h6>
+                          {item.category && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono shrink-0">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
+                        {item.subtitle && (
+                          <p className="text-[11px] text-slate-400 truncate">{item.subtitle}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                      {/* Selector de Tamaño del Tile */}
+                      <select
+                        value={item.size}
+                        onChange={(e) => handleUpdateGalleryItemSize(item.id, e.target.value as GalleryImageItem['size'])}
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-white/15 text-slate-200 text-[11px] font-mono focus:border-sky-400 focus:outline-none cursor-pointer"
+                        title="Tamaño del Tile en el Grid"
+                      >
+                        <option value="large">Grande (2x2)</option>
+                        <option value="tall">Vertical (1x2)</option>
+                        <option value="square">Cuadrado (1x1)</option>
+                        <option value="small">Pequeño (1x1)</option>
+                      </select>
+
+                      {/* Botones de Reordenamiento */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGalleryItem(idx, 'up')}
+                          disabled={idx === 0}
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+                          title="Mover arriba"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGalleryItem(idx, 'down')}
+                          disabled={idx === (editingCard.gallery?.length || 0) - 1}
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+                          title="Mover abajo"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Botón Eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGalleryItem(item.id)}
+                        className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 transition-colors cursor-pointer"
+                        title="Eliminar imagen de la galería"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-black/30 border border-dashed border-white/15 text-center text-xs text-slate-400">
+                <ImageIcon className="w-6 h-6 mx-auto mb-1.5 opacity-40 text-sky-400" />
+                <span>No hay imágenes cargadas en esta galería todavía. Agrega la primera a continuación:</span>
+              </div>
+            )}
+
+            {/* Formulario para Agregar Nueva Imagen */}
+            <div className="pt-3 border-t border-white/10 space-y-3">
+              <span className="text-[11px] font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Plus className="w-3.5 h-3.5" />
+                <span>Añadir Nueva Imagen a la Galería</span>
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="text-slate-300 font-medium block mb-1">URL de la Imagen</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={newGalUrl} 
+                      onChange={(e) => setNewGalUrl(e.target.value)} 
+                      placeholder="https://images.unsplash.com/... o enlace directo"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono text-xs focus:border-sky-400 focus:outline-none"
+                    />
+                    <label 
+                      className={`px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer shrink-0 flex items-center justify-center transition-all ${
+                        isUploadingGalImage ? 'opacity-50 pointer-events-none' : ''
+                      }`}
+                      title="Subir archivo de imagen desde tu equipo a Firebase Storage"
+                    >
+                      {isUploadingGalImage ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                      ) : (
+                        <Upload className="w-4 h-4 text-sky-400" />
+                      )}
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleGalleryImageFileUpload} 
+                        className="hidden" 
+                        disabled={isUploadingGalImage}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-medium block mb-1">Título de la Captura / Proyecto</label>
+                  <input 
+                    type="text" 
+                    value={newGalTitle} 
+                    onChange={(e) => setNewGalTitle(e.target.value)} 
+                    placeholder="Ej: Dashboard de Ventas Web & PWA"
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white text-xs focus:border-sky-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-medium block mb-1">Categoría (para filtro interactivo)</label>
+                  <input 
+                    type="text" 
+                    value={newGalCategory} 
+                    onChange={(e) => setNewGalCategory(e.target.value)} 
+                    placeholder="Ej: Web & PWA, Branding, Hardware POS"
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white text-xs focus:border-sky-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-medium block mb-1">Tamaño del Tile (Geometría Bento)</label>
+                  <select
+                    value={newGalSize}
+                    onChange={(e) => setNewGalSize(e.target.value as GalleryImageItem['size'])}
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white text-xs focus:border-sky-400 focus:outline-none cursor-pointer"
+                  >
+                    <option value="large">Grande (2x2 - Destacado)</option>
+                    <option value="tall">Vertical (1x2 - Smartphone / Mobile)</option>
+                    <option value="square">Cuadrado (1x1 - Equilibrado)</option>
+                    <option value="small">Pequeño (1x1 - Compacto)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-medium block mb-1 text-xs">Subtítulo / Breve Explicación (Opcional)</label>
+                <input 
+                  type="text" 
+                  value={newGalSubtitle} 
+                  onChange={(e) => setNewGalSubtitle(e.target.value)} 
+                  placeholder="Ej: Implementación con React 19 y sincronización en tiempo real"
+                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white text-xs focus:border-sky-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={handleAddGalleryItem}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Insertar Imagen en la Galería</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="text-xs">

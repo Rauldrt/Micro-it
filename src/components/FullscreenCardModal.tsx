@@ -493,9 +493,9 @@ export const FullscreenCardModal: React.FC<FullscreenCardModalProps> = ({
                 </div>
               </div>
 
-              {/* Galería Bento Tiles (Geometría RonDesignLab y Movimientos Líquidos Material Design 3) */}
-              {card.id === 'card-1' && (
-                <StudioBentoGallery accentColor={card.accentColor} />
+              {/* Galería de Imágenes Bento Tiles (Windows Style con Geometría Líquida MD3) */}
+              {((card.gallery && card.gallery.length > 0) || card.id === 'card-1') && (
+                <StudioBentoGallery card={card} accentColor={card.accentColor} />
               )}
 
               {/* Estación de Descarga Holográfica Interactiva (Solo para soluciones con descarga activa) */}

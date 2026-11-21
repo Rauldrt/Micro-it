@@ -1,3 +1,12 @@
+export interface GalleryImageItem {
+  id: string;
+  url: string;
+  title: string;
+  category?: string;
+  subtitle?: string;
+  size: 'large' | 'tall' | 'square' | 'small';
+}
+
 export interface CardItem {
   id: string;
   number: string;
@@ -20,6 +29,7 @@ export interface CardItem {
   longDescription: string;
   tags: string[];
   hasDownload?: boolean; // Habilita o deshabilita la estación de descargas
+  gallery?: GalleryImageItem[]; // Galería de imágenes estilo Bento Tiles de Windows
   version?: string;
   downloadUrl?: string;
   fileSize?: string;

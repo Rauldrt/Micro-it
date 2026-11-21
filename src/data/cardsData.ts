@@ -22,7 +22,57 @@ export const CARDS_DATA: CardItem[] = [
     ],
     longDescription: 'En Micro-it unificamos la ingeniería de software con la creación de marca. Diseñamos identidades visuales atractivas y desarrollamos sistemas a medida (PWAs, paneles administrativos y aplicaciones móviles) optimizados para el flujo operativo real de tu comercio o empresa.',
     tags: ['Desarrollo Web', 'Branding', 'UI/UX', 'Software a Medida'],
-    hasDownload: false
+    hasDownload: false,
+    gallery: [
+      {
+        id: 'gal-1',
+        title: 'Plataformas Web & Paneles Administrativos',
+        category: 'Ingeniería de Software',
+        subtitle: 'Dashboards en tiempo real con React 19, TypeScript y arquitectura serverless',
+        url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
+        size: 'large'
+      },
+      {
+        id: 'gal-2',
+        title: 'Aplicaciones Móviles & PWA',
+        category: 'Android & Web',
+        subtitle: 'Experiencias nativas ultra-fluidas con modo offline-first',
+        url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80',
+        size: 'tall'
+      },
+      {
+        id: 'gal-3',
+        title: 'Diseño de Identidad & UI/UX 4K',
+        category: 'Branding & Sistemas',
+        subtitle: 'Design systems vectoriales, paletas y tipografías cinéticas',
+        url: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+        size: 'square'
+      },
+      {
+        id: 'gal-4',
+        title: 'Facturación AFIP & Terminales POS',
+        category: 'Hardware & Fiscal',
+        subtitle: 'Integración de impresoras térmicas Bluetooth y emisión directa de CAE',
+        url: 'https://images.unsplash.com/photo-1556742049-0a67e557224e?auto=format&fit=crop&w=800&q=80',
+        size: 'tall'
+      },
+      {
+        id: 'gal-5',
+        title: 'IA Multimodal con Google Gemini',
+        category: 'Inteligencia Artificial',
+        subtitle: 'Transcripción de voz, procesamiento de documentos y bots comerciales',
+        url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+        size: 'square'
+      },
+      {
+        id: 'gal-6',
+        title: 'Conectividad Comercial & Balanzas',
+        category: 'Infraestructura en Sitio',
+        subtitle: 'Ruteo de remitos en la nube, balanzas electrónicas y optimización de redes',
+        url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80',
+        size: 'large'
+      }
+    ]
   },
   {
     id: 'card-2',

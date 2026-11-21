@@ -164,3 +164,25 @@ export const uploadSolutionMedia = async (
     );
   });
 };
+
+/**
+ * Sube una imagen directamente para la Galería Bento de la solución
+ */
+export const uploadGalleryImageFile = async (
+  solutionId: string,
+  imageFile: File
+): Promise<string> => {
+  const storage = getFirebaseStorage();
+  if (!storage) {
+    throw new Error('Firebase Storage no está disponible o no se encuentra inicializado.');
+  }
+  const timestamp = Date.now();
+  const cleanId = solutionId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const fileExt = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const imgRef = ref(storage, `solutions/${cleanId}/gallery_${timestamp}.${fileExt}`);
+  const uploadTask = await uploadBytesResumable(imgRef, imageFile, {
+    contentType: imageFile.type || 'image/jpeg',
+    cacheControl: 'public,max-age=31536000'
+  });
+  return await getDownloadURL(uploadTask.ref);
+};
