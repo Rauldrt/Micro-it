@@ -156,7 +156,7 @@ export const StudioBentoGallery: React.FC<StudioBentoGalleryProps> = ({
                 transition: { type: 'spring', stiffness: 350, damping: 22 }
               }}
               onClick={() => setSelectedImageIndex(idx)}
-              className={`group relative rounded-[28px] md:rounded-[32px] overflow-hidden border border-white/15 hover:border-white/40 shadow-2xl bg-slate-950 cursor-pointer flex flex-col justify-between ${getTileClasses(item.size)}`}
+              className={`group relative rounded-[38px] sm:rounded-[44px] md:rounded-[48px] overflow-hidden border border-white/15 hover:border-white/40 shadow-2xl bg-slate-950 cursor-pointer flex flex-col justify-between ${getTileClasses(item.size)}`}
               style={{
                 boxShadow: '0 16px 40px -12px rgba(0,0,0,0.7)'
               }}
@@ -187,9 +187,9 @@ export const StudioBentoGallery: React.FC<StudioBentoGalleryProps> = ({
               />
 
               {/* Cabecera del Tile: Badge de Categoría y Botón de Apertura */}
-              <div className="relative z-20 p-4 sm:p-5 flex items-center justify-between">
+              <div className="relative z-20 p-5 sm:p-6 flex items-center justify-between">
                 {item.category && (
-                  <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-slate-950/80 backdrop-blur-md text-white border border-white/15 shadow-sm">
+                  <span className="px-3.5 py-1.5 rounded-full text-[11px] font-mono font-bold bg-slate-950/80 backdrop-blur-md text-white border border-white/15 shadow-sm">
                     {item.category}
                   </span>
                 )}
@@ -201,7 +201,7 @@ export const StudioBentoGallery: React.FC<StudioBentoGalleryProps> = ({
               </div>
 
               {/* Pie del Tile: Título y Descripción del Proyecto */}
-              <div className="relative z-20 p-5 sm:p-6 space-y-1">
+              <div className="relative z-20 p-6 sm:p-7 md:p-8 space-y-1.5">
                 <h4 className="text-base sm:text-lg font-bold text-white tracking-tight group-hover:text-sky-300 transition-colors drop-shadow-md">
                   {item.title}
                 </h4>
@@ -262,7 +262,7 @@ export const StudioBentoGallery: React.FC<StudioBentoGalleryProps> = ({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-              className="relative max-w-5xl w-full max-h-[85vh] rounded-[32px] overflow-hidden border border-white/20 shadow-2xl bg-slate-900 flex flex-col"
+              className="relative max-w-5xl w-full max-h-[85vh] rounded-[38px] md:rounded-[48px] overflow-hidden border border-white/20 shadow-2xl bg-slate-900 flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative w-full h-[60vh] sm:h-[68vh] bg-black flex items-center justify-center overflow-hidden">
